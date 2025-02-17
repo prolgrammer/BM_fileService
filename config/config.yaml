@@ -1,0 +1,12 @@
+app:
+  gin_mode: "${GIN_MODE}"
+http:
+  host: "${APP_HOST}"
+  port: "${APP_PORT}"
+minio:
+  host: "${MINIO_HOST}"
+  port: "${MINIO_PORT}"
+  endpoint: "${MINIO_ENDPOINT}"
+  accessID: "${MINIO_ACCESS_KEY}"
+  secretAccessKey: "${MINIO_SECRET_KEY}"
+  bucketName: "${MINIO_BUCKET}"
