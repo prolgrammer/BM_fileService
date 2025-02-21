@@ -4,9 +4,7 @@ http:
   host: "${APP_HOST}"
   port: "${APP_PORT}"
 minio:
-  host: "${MINIO_HOST}"
-  port: "${MINIO_PORT}"
   endpoint: "${MINIO_ENDPOINT}"
-  accessID: "${MINIO_ACCESS_KEY}"
-  secretAccessKey: "${MINIO_SECRET_KEY}"
+  rootUser: "${MINIO_ROOT_USER}"
+  rootPassword: "${MINIO_ROOT_PASSWORD}"
   bucketName: "${MINIO_BUCKET}"

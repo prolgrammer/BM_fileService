@@ -2,44 +2,47 @@ package usecases
 
 import (
 	"app/controllers/requests"
+	m "app/infrastructure/minio"
 	"context"
 	"fmt"
-	"io"
-	"os"
+	"github.com/minio/minio-go/v7"
 )
 
 type LoadFileUseCases interface {
 	LoadFile(ctx context.Context, req requests.LoadFile) error
 }
 
-type loadFileUseCase struct{}
+type loadFileUseCase struct {
+	minio *m.Client
+}
 
-func NewLoadFileUseCase() LoadFileUseCases {
-	return &loadFileUseCase{}
+func NewLoadFileUseCase(minio *m.Client) LoadFileUseCases {
+	return &loadFileUseCase{
+		minio: minio,
+	}
 }
 
 func (l loadFileUseCase) LoadFile(ctx context.Context, req requests.LoadFile) error {
-	var err error
-
-	for i := range req.Files {
-		data, err := io.ReadAll(req.Files[i])
-		if err != nil {
-			fmt.Printf("Error while read file: %v", err)
-			return err
-		}
-
-		file, err := os.Create("../testdir")
-		if err != nil {
-			fmt.Printf("Error while create file: %v", err)
-			return err
-		}
-
-		_, err = file.Write(data)
-		if err != nil {
-			fmt.Printf("Error while write file: %v", err)
-			return err
-		}
+	if len(req.Files) == 0 {
+		return fmt.Errorf("no files provided")
 	}
 
-	return err
+	for _, fileHeader := range req.Files {
+		file, err := fileHeader.Open()
+		if err != nil {
+			return fmt.Errorf("failed to open file %s: %w", fileHeader.Filename, err)
+		}
+		defer file.Close()
+
+		objectName := fmt.Sprintf("%s/%s", req.Dir, fileHeader.Filename)
+
+		_, err = l.minio.MinioClient.PutObject(ctx, l.minio.BucketName, objectName, file, fileHeader.Size, minio.PutObjectOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to upload file %s to minio: %w", fileHeader.Filename, err)
+		}
+
+		fmt.Printf("uploaded file %s to minio\n", fileHeader.Filename)
+	}
+
+	return nil
 }

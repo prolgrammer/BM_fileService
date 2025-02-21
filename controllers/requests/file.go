@@ -3,6 +3,6 @@ package requests
 import "mime/multipart"
 
 type LoadFile struct {
-	Dir   string           `json:"dir"`
-	Files []multipart.File `json:"files"`
+	Dir   string                  `form:"dir"`
+	Files []*multipart.FileHeader `form:"files"`
 }

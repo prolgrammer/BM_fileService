@@ -5,8 +5,8 @@ import (
 	"app/internal/usecases"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/prolgrammer/BM_authService/pkg/middleware"
 	e "github.com/prolgrammer/BM_package/errors"
+	"github.com/prolgrammer/BM_package/middleware"
 )
 
 type loadFileController struct {
@@ -36,6 +36,10 @@ func (lf *loadFileController) LoadFile(ctx *gin.Context) {
 
 	err := lf.loadFileUseCase.LoadFile(ctx, req)
 	if err != nil {
-
+		wrappedError := fmt.Errorf("There was a problem during load file: %w", err)
+		middleware.AddGinError(ctx, wrappedError)
+		return
 	}
+
+	ctx.JSON(200, gin.H{})
 }
