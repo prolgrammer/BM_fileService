@@ -1,0 +1,43 @@
+[
+  {
+    "create": "categories",
+    "validator": {
+      "$jsonSchema": {
+        "bsonType": "object",
+        "required": ["_id", "user_id", "name", "folders"],
+        "properties": {
+          "_id": {"bsonType": "string"},
+          "user_id": {"bsonType": "string"},
+          "name": {"bsonType":  "string"},
+          "folders": {
+            "bsonType": "array",
+            "items": {
+              "bsonType": "object",
+              "required": ["_id", "name", "files", "created_at"],
+              "properties": {
+                "_id": {"bsonType": "string"},
+                "name": {"bsonType": "string"},
+                "created_at": {"bsonType":"date"},
+                "files": {
+                  "bsonType": "array",
+                  "items": {
+                    "bsonType": "object",
+                    "required": ["_id", "name", "path", "size", "type", "created_at"],
+                    "properties": {
+                      "_id": {"bsonType":  "string"},
+                      "name": {"bsonType": "string"},
+                      "path": {"bsonType": "string"},
+                      "size": {"bsonType": "int"},
+                      "type": {"bsonType": "string"},
+                      "created_at": {"bsonType": "date"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+]

@@ -9,7 +9,7 @@ import (
 )
 
 type LoadFileUseCases interface {
-	LoadFile(ctx context.Context, req requests.LoadFile) error
+	LoadFile(ctx context.Context, accountId string, req requests.LoadFile) error
 }
 
 type loadFileUseCase struct {
@@ -22,7 +22,7 @@ func NewLoadFileUseCase(minio *m.Client) LoadFileUseCases {
 	}
 }
 
-func (l loadFileUseCase) LoadFile(ctx context.Context, req requests.LoadFile) error {
+func (l loadFileUseCase) LoadFile(ctx context.Context, accountId string, req requests.LoadFile) error {
 	if len(req.Files) == 0 {
 		return fmt.Errorf("no files provided")
 	}
@@ -34,7 +34,7 @@ func (l loadFileUseCase) LoadFile(ctx context.Context, req requests.LoadFile) er
 		}
 		defer file.Close()
 
-		objectName := fmt.Sprintf("%s/%s", req.Dir, fileHeader.Filename)
+		objectName := fmt.Sprintf("%s/%s/%s", accountId, req.Dir, fileHeader.Filename)
 
 		_, err = l.minio.MinioClient.PutObject(ctx, l.minio.BucketName, objectName, file, fileHeader.Size, minio.PutObjectOptions{})
 		if err != nil {

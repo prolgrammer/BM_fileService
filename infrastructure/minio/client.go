@@ -26,7 +26,11 @@ func NewClient(host, accessKey, secretKey, bucketName string, useSSL bool) (*Cli
 
 	//err = client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
 	//if err != nil {
-	//	return nil, fmt.Errorf("failed to create bucket %s: %v", bucketName, err)
+	//	resp := minio.ToErrorResponse(err)
+	//	if resp.Code != "BucketAlreadyExists" {
+	//		return nil, fmt.Errorf("failed to create bucket %s: %v", bucketName, err)
+	//	}
+	//	fmt.Println("Bucket already exists, continuing...")
 	//}
 
 	return &Client{

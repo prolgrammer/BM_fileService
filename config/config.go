@@ -2,6 +2,7 @@ package config
 
 import (
 	"app/config/minio"
+	"app/config/mongo"
 	"fmt"
 	"github.com/spf13/viper"
 	"os"
@@ -11,6 +12,7 @@ type (
 	Config struct {
 		App   `mapstructure:"app"`
 		HTTP  `mapstructure:"http"`
+		Mongo mongo.Config
 		Minio minio.Minio `mapstructure:"minio"`
 	}
 
