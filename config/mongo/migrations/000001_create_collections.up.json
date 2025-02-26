@@ -13,11 +13,10 @@
             "bsonType": "array",
             "items": {
               "bsonType": "object",
-              "required": ["_id", "name", "files", "created_at"],
+              "required": ["_id", "name", "files"],
               "properties": {
                 "_id": {"bsonType": "string"},
                 "name": {"bsonType": "string"},
-                "created_at": {"bsonType":"date"},
                 "files": {
                   "bsonType": "array",
                   "items": {
