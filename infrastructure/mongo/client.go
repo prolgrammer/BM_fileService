@@ -92,7 +92,7 @@ func (c *Client) MigrateUp() error {
 	if err = m.Up(); err != nil {
 		if errors.Is(err, migrate.ErrNoChange) {
 			fmt.Printf("No changes to migrations\n")
-			return migrate.ErrNoChange
+			return ErrNoChange
 		}
 		return fmt.Errorf("failed to migrate up: %w", err)
 	}

@@ -4,6 +4,7 @@ import (
 	"app/controllers/requests"
 	"app/internal/repositories"
 	"context"
+	"fmt"
 )
 
 type createCategory struct {
@@ -21,8 +22,12 @@ func NewCreateCategoryUseCase(
 	}
 }
 func (uc *createCategory) CreateCategory(ctx context.Context, accountId string, req requests.Category) error {
-	_, err := uc.categoryRepository.SelectCategory(ctx, accountId, req.Name)
+	exists, err := uc.categoryRepository.CheckCategoryExists(ctx, accountId, req.Name)
+	fmt.Println(exists, err)
 	if err != nil {
+		return fmt.Errorf("%w", err)
+	}
+	if exists {
 		return ErrCategoryAlreadyExists
 	}
 

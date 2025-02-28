@@ -5,6 +5,7 @@ import (
 	http2 "app/controllers/http"
 	m "app/infrastructure/minio"
 	"app/infrastructure/mongo"
+	"app/internal/repositories"
 	"app/internal/usecases"
 	"errors"
 	"fmt"
@@ -14,10 +15,17 @@ import (
 )
 
 var (
-	cfg             *config.Config
-	loadFileUseCase usecases.LoadFileUseCases
-	minioClient     *m.Client
-	mongoClient     *mongo.Client
+	cfg         *config.Config
+	minioClient *m.Client
+	mongoClient *mongo.Client
+
+	categoryRepository repositories.CategoryRepository
+
+	createCategoryUseCase   usecases.CreateCategoryUseCase
+	getCategoryUseCase      usecases.GetCategoryUseCase
+	getAllCategoriesUseCase usecases.GetAllCategoryUseCase
+	deleteCategoryUseCase   usecases.DeleteCategoryUseCase
+	loadFileUseCase         usecases.LoadFileUseCases
 )
 
 func Run() {
@@ -43,27 +51,9 @@ func Run() {
 		panic(fmt.Errorf("failed to initialize minio client: %v", err))
 	}
 
+	initRepositories()
 	initUseCases()
 	runServer()
-}
-
-func runServer() {
-	router := gin.New()
-	mw := middleware.NewMiddleware("someSuperStrongKey")
-
-	http2.NewLoadFileController(router, loadFileUseCase, mw)
-
-	address := fmt.Sprintf("%s:%s", cfg.HTTP.Host, cfg.HTTP.Port)
-	fmt.Printf("starting server at %s\n", address)
-
-	err := http.ListenAndServe(address, router)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func initUseCases() {
-	loadFileUseCase = usecases.NewLoadFileUseCase(minioClient)
 }
 
 func initPackages(cfg *config.Config) error {
@@ -86,4 +76,38 @@ func initPackages(cfg *config.Config) error {
 	}
 
 	return nil
+}
+
+func initRepositories() {
+	collection := mongoClient.Database.Collection("categories")
+
+	categoryRepository = repositories.NewCategoryDataRepository(collection)
+}
+
+func initUseCases() {
+	createCategoryUseCase = usecases.NewCreateCategoryUseCase(categoryRepository)
+	getCategoryUseCase = usecases.NewGetCategory(categoryRepository)
+	getAllCategoriesUseCase = usecases.NewGetAllCategory(categoryRepository)
+	deleteCategoryUseCase = usecases.NewDeleteCategoryUseCase(categoryRepository)
+
+	loadFileUseCase = usecases.NewLoadFileUseCase(minioClient)
+}
+
+func runServer() {
+	router := gin.New()
+	mw := middleware.NewMiddleware("someSuperStrongKey")
+
+	http2.NewCreateCategoryController(router, createCategoryUseCase, mw)
+	http2.NewGetCategoryController(router, getCategoryUseCase, mw)
+	http2.NewGetAllCategoriesUseCases(router, getAllCategoriesUseCase, mw)
+	http2.NewDeleteCategoryController(router, deleteCategoryUseCase, mw)
+	http2.NewLoadFileController(router, loadFileUseCase, mw)
+
+	address := fmt.Sprintf("%s:%s", cfg.HTTP.Host, cfg.HTTP.Port)
+	fmt.Printf("starting server at %s\n", address)
+
+	err := http.ListenAndServe(address, router)
+	if err != nil {
+		panic(err)
+	}
 }

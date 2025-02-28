@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	e "github.com/prolgrammer/BM_package/errors"
 	"github.com/prolgrammer/BM_package/middleware"
+	"net/http"
 )
 
 type loadFileController struct {
@@ -22,7 +23,7 @@ func NewLoadFileController(
 		loadFileUseCase: loadFileUseCase,
 	}
 
-	handler.POST("/load/file", lf.LoadFile, middleware.HandleErrors, middleware.Authenticate)
+	handler.POST("/app/load/file", lf.LoadFile, middleware.HandleErrors, middleware.Authenticate)
 }
 
 func (lf *loadFileController) LoadFile(ctx *gin.Context) {
@@ -32,10 +33,11 @@ func (lf *loadFileController) LoadFile(ctx *gin.Context) {
 	if !exist {
 		wrappedError := fmt.Errorf("%w", e.ErrAuthenticated)
 		middleware.AddGinError(ctx, wrappedError)
+		return
 	}
 
 	var req requests.LoadFile
-	if err := ctx.ShouldBind(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrappedError := fmt.Errorf("%w: %w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
@@ -48,6 +50,6 @@ func (lf *loadFileController) LoadFile(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(200, gin.H{
+	ctx.JSON(http.StatusOK, gin.H{
 		"answer": "file load success"})
 }

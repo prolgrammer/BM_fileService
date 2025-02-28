@@ -11,6 +11,7 @@ type (
 		SelectCategory(ctx context.Context, userId, category string) (entities.Category, error)
 		SelectAllCategories(ctx context.Context, userId string) ([]entities.Category, error)
 		DeleteCategory(ctx context.Context, userId, category string) error
+		CheckCategoryExists(ctx context.Context, userId, category string) (bool, error)
 	}
 
 	FolderRepository interface {
