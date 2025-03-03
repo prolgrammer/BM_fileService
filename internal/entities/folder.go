@@ -1,6 +1,7 @@
 package entities
 
 type Folder struct {
-	Name  string
-	Files []File
+	Id    string `json:"id" bson:"_id,omitempty" mapstructure:"id"`
+	Name  string `json:"name" bson:"name"`
+	Files []File `json:"files" bson:"files"`
 }

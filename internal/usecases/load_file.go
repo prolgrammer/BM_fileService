@@ -34,7 +34,7 @@ func (l loadFileUseCase) LoadFile(ctx context.Context, accountId string, req req
 		}
 		defer file.Close()
 
-		objectName := fmt.Sprintf("%s/%s/%s", accountId, req.Dir, fileHeader.Filename)
+		objectName := fmt.Sprintf("%s/%s/%s", accountId, req.Folder, fileHeader.Filename)
 
 		_, err = l.minio.MinioClient.PutObject(ctx, l.minio.BucketName, objectName, file, fileHeader.Size, minio.PutObjectOptions{})
 		if err != nil {

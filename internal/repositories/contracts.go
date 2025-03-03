@@ -19,6 +19,7 @@ type (
 		SelectFolder(ctx context.Context, userId, category, folder string) (entities.Folder, error)
 		SelectFolders(ctx context.Context, userId, category string) ([]entities.Folder, error)
 		DeleteFolder(ctx context.Context, userId, category, folder string) error
+		CheckFolderExists(ctx context.Context, userId, category, folder string) (bool, error)
 	}
 
 	FileRepository interface {

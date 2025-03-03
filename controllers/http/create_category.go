@@ -46,7 +46,6 @@ func (cc *createCategoryController) CreateCategory(ctx *gin.Context) {
 	err := cc.createCategory.CreateCategory(ctx, accountId.(string), req)
 	if err != nil {
 		wrappedError := fmt.Errorf("there was a problem during create category: %w", err)
-		fmt.Println(wrappedError)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}

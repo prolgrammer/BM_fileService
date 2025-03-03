@@ -1,5 +1,5 @@
 package requests
 
 type Category struct {
-	Name string
+	Name string `json:"name"`
 }
