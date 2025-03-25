@@ -1,7 +1,7 @@
 package usecases
 
 import (
-	"app/internal/entities"
+	"app/controllers/responses"
 	"app/internal/repositories"
 	"context"
 )
@@ -11,7 +11,7 @@ type getAllCategory struct {
 }
 
 type GetAllCategoryUseCase interface {
-	GetAllCategory(ctx context.Context, accountId string) ([]entities.Category, error)
+	GetAllCategory(ctx context.Context, accountId string) ([]responses.Category, error)
 }
 
 func NewGetAllCategory(categoryRepository repositories.CategoryRepository) GetAllCategoryUseCase {
@@ -20,6 +20,16 @@ func NewGetAllCategory(categoryRepository repositories.CategoryRepository) GetAl
 	}
 }
 
-func (uc *getAllCategory) GetAllCategory(ctx context.Context, accountId string) ([]entities.Category, error) {
-	return uc.categoryRepository.SelectAllCategories(ctx, accountId)
+func (uc *getAllCategory) GetAllCategory(ctx context.Context, accountId string) ([]responses.Category, error) {
+	categories, err := uc.categoryRepository.SelectAllCategories(ctx, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	respCategories := make([]responses.Category, len(categories))
+	for i, category := range categories {
+		respCategories[i] = responses.NewCategory(category.Name, category.UserId, category.Folders)
+	}
+
+	return respCategories, nil
 }

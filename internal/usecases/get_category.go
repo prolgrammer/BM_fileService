@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"app/controllers/requests"
-	"app/internal/entities"
+	"app/controllers/responses"
 	"app/internal/repositories"
 	"context"
 	"errors"
@@ -13,7 +13,7 @@ type getCategory struct {
 }
 
 type GetCategoryUseCase interface {
-	GetCategory(ctx context.Context, accountId string, req requests.Category) (entities.Category, error)
+	GetCategory(ctx context.Context, accountId string, req requests.Category) (responses.Category, error)
 }
 
 func NewGetCategory(categoryRepository repositories.CategoryRepository) GetCategoryUseCase {
@@ -22,14 +22,15 @@ func NewGetCategory(categoryRepository repositories.CategoryRepository) GetCateg
 	}
 }
 
-func (uc *getCategory) GetCategory(ctx context.Context, accountId string, req requests.Category) (entities.Category, error) {
+func (uc *getCategory) GetCategory(ctx context.Context, accountId string, req requests.Category) (responses.Category, error) {
 	category, err := uc.categoryRepository.SelectCategory(ctx, accountId, req.Name)
 	if err != nil {
 		if errors.Is(err, repositories.ErrCategoryNotFound) {
-			return entities.Category{}, ErrCategoryNotFound
+			return responses.Category{}, ErrCategoryNotFound
 		}
 
-		return entities.Category{}, err
+		return responses.Category{}, err
 	}
-	return category, nil
+
+	return responses.NewCategory(category.Name, category.UserId, category.Folders), nil
 }
