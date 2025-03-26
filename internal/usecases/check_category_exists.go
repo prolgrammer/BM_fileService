@@ -15,11 +15,11 @@ type CheckCategoryExistUseCase interface {
 }
 
 func NewCheckCategoryExist(categoryRepository repositories.CategoryRepository) CheckCategoryExistUseCase {
-	return checkCategoryExistUseCase{
+	return &checkCategoryExistUseCase{
 		categoryRepository: categoryRepository,
 	}
 }
 
-func (c checkCategoryExistUseCase) CheckCategoryExist(ctx context.Context, accountId string, request requests.Category) (bool, error) {
+func (c *checkCategoryExistUseCase) CheckCategoryExist(ctx context.Context, accountId string, request requests.Category) (bool, error) {
 	return c.categoryRepository.CheckCategoryExists(ctx, accountId, request.Name)
 }

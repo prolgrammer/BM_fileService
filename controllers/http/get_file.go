@@ -10,26 +10,22 @@ import (
 	"net/http"
 )
 
-type getFolderController struct {
-	getFolderUseCase usecases.SelectFolderUseCase
+type getFileController struct {
+	getFileUseCase usecases.GetFileUseCase
 }
 
-func NewGetFolderController(
+func NewGetFileController(
 	engine *gin.Engine,
-	getFolderUseCase usecases.SelectFolderUseCase,
-	middleware middleware.Middleware,
-) {
-
-	gf := &getFolderController{
-		getFolderUseCase: getFolderUseCase,
+	getFileUseCase usecases.GetFileUseCase,
+	middleware middleware.Middleware) {
+	gf := &getFileController{
+		getFileUseCase: getFileUseCase,
 	}
 
-	engine.GET("/app/folder", middleware.Authenticate, gf.GetFolder, middleware.HandleErrors)
+	engine.GET("app/file", middleware.Authenticate, gf.GetFile, middleware.HandleErrors)
 }
 
-func (gf *getFolderController) GetFolder(ctx *gin.Context) {
-	fmt.Println("get folder")
-
+func (gf *getFileController) GetFile(ctx *gin.Context) {
 	accountId, exists := ctx.Get("account_id")
 	if !exists {
 		wrappedError := fmt.Errorf("%w", e.ErrAuthenticated)
@@ -37,19 +33,18 @@ func (gf *getFolderController) GetFolder(ctx *gin.Context) {
 		return
 	}
 
-	var req requests.Folder
+	var req requests.File
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrappedError := fmt.Errorf("%w:%w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
-	response, err := gf.getFolderUseCase.SelectFolder(ctx, accountId.(string), req)
+	file, err := gf.getFileUseCase.GetFile(ctx, accountId.(string), req)
 	if err != nil {
-		wrappedError := fmt.Errorf("there was a problem during get folder: %w", err)
+		wrappedError := fmt.Errorf("failed to get file:%w", err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
-
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, gin.H{"file": file})
 }

@@ -16,13 +16,13 @@ type CheckFolderExistUseCase interface {
 }
 
 func NewCheckFolderExistUseCase(categoryRepository repositories.CategoryRepository, folderRepository repositories.FolderRepository) CheckFolderExistUseCase {
-	return checkFolderExistUseCase{
+	return &checkFolderExistUseCase{
 		categoryRepository: categoryRepository,
 		folderRepository:   folderRepository,
 	}
 }
 
-func (c checkFolderExistUseCase) CheckFolderExist(ctx context.Context, accountId string, request requests.Folder) (bool, error) {
+func (c *checkFolderExistUseCase) CheckFolderExist(ctx context.Context, accountId string, request requests.Folder) (bool, error) {
 	_, err := c.categoryRepository.SelectCategory(ctx, accountId, request.Category.Name)
 	if err != nil {
 		return false, err

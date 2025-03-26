@@ -24,7 +24,7 @@ func NewGetCategoryController(
 		getCategoryUseCase: getCategoryUseCase,
 	}
 
-	engine.GET("/app/category/get", middleware.Authenticate, gc.GetCategory, middleware.HandleErrors)
+	engine.GET("/app/category", middleware.Authenticate, gc.GetCategory, middleware.HandleErrors)
 }
 
 func (gc *getCategoryController) GetCategory(ctx *gin.Context) {

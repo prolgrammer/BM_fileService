@@ -9,25 +9,24 @@ import (
 	"github.com/prolgrammer/BM_package/middleware"
 )
 
-type createFolderController struct {
-	createFolderUseCase usecases.CreateFolderUseCase
+type getAllFilesController struct {
+	getAllFilesUseCase usecases.GetAllFilesUseCase
 }
 
-func NewCreateFolderController(
+func NewGetAllFilesUseCase(
 	engine *gin.Engine,
-	createFolder usecases.CreateFolderUseCase,
+	getAllFilesUseCase usecases.GetAllFilesUseCase,
 	middleware middleware.Middleware,
 ) {
-	cf := &createFolderController{
-		createFolderUseCase: createFolder,
+
+	gaf := getAllFilesController{
+		getAllFilesUseCase: getAllFilesUseCase,
 	}
 
-	engine.POST("/app/folder", middleware.Authenticate, cf.CreateFolder, middleware.HandleErrors)
+	engine.GET("app/files", middleware.Authenticate, gaf.GetAllFiles, middleware.HandleErrors)
 }
 
-func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
-	fmt.Println("create folder")
-
+func (gaf *getAllFilesController) GetAllFiles(ctx *gin.Context) {
 	accountId, exists := ctx.Get("account_id")
 	if !exists {
 		wrappedError := fmt.Errorf("%w", e.ErrAuthenticated)
@@ -35,20 +34,21 @@ func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
 		return
 	}
 
-	var req requests.Folder
+	var req requests.File
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrappedError := fmt.Errorf("%w: %w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
-	err := cf.createFolderUseCase.CreateFolder(ctx, accountId.(string), req)
+	files, err := gaf.getAllFilesUseCase.GetAllFiles(ctx, accountId.(string), req)
 	if err != nil {
-		wrappedError := fmt.Errorf("there was a problem during create folder: %w", err)
+		wrappedError := fmt.Errorf("failed to get filesL %w", err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
 	ctx.JSON(200, gin.H{
-		"answer": "folder create successful"})
+		"files": files,
+	})
 }

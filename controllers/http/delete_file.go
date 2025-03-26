@@ -9,25 +9,23 @@ import (
 	"github.com/prolgrammer/BM_package/middleware"
 )
 
-type createFolderController struct {
-	createFolderUseCase usecases.CreateFolderUseCase
+type deleteFileController struct {
+	deleteFileUseCase usecases.DeleteFileUseCase
 }
 
-func NewCreateFolderController(
+func NewDeleteFileController(
 	engine *gin.Engine,
-	createFolder usecases.CreateFolderUseCase,
+	deleteFileUseCase usecases.DeleteFileUseCase,
 	middleware middleware.Middleware,
 ) {
-	cf := &createFolderController{
-		createFolderUseCase: createFolder,
+	df := &deleteFileController{
+		deleteFileUseCase: deleteFileUseCase,
 	}
 
-	engine.POST("/app/folder", middleware.Authenticate, cf.CreateFolder, middleware.HandleErrors)
+	engine.DELETE("app/file/delete", middleware.Authenticate, df.DeleteFile, middleware.HandleErrors)
 }
 
-func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
-	fmt.Println("create folder")
-
+func (df *deleteFileController) DeleteFile(ctx *gin.Context) {
 	accountId, exists := ctx.Get("account_id")
 	if !exists {
 		wrappedError := fmt.Errorf("%w", e.ErrAuthenticated)
@@ -35,20 +33,21 @@ func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
 		return
 	}
 
-	var req requests.Folder
+	var req requests.File
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrappedError := fmt.Errorf("%w: %w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
-	err := cf.createFolderUseCase.CreateFolder(ctx, accountId.(string), req)
+	err := df.deleteFileUseCase.DeleteFile(ctx, accountId.(string), req)
 	if err != nil {
-		wrappedError := fmt.Errorf("there was a problem during create folder: %w", err)
+		wrappedError := fmt.Errorf("failed to delete file: %w", err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
 	ctx.JSON(200, gin.H{
-		"answer": "folder create successful"})
+		"message": "File deleted successfully",
+	})
 }

@@ -27,5 +27,6 @@ type (
 		SelectFile(ctx context.Context, userId, category, folderName, nameFile string) (entities.File, error)
 		SelectFiles(ctx context.Context, userId, category, folderName string) ([]entities.File, error)
 		DeleteFile(ctx context.Context, userId, category, folderName, fileName string) error
+		CheckFileExists(ctx context.Context, userId, category, folderName, fileName string) (bool, error)
 	}
 )

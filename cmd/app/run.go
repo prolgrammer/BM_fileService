@@ -21,6 +21,7 @@ var (
 
 	categoryRepository repositories.CategoryRepository
 	folderRepository   repositories.FolderRepository
+	fileRepository     repositories.FileRepository
 
 	createCategoryUseCase      usecases.CreateCategoryUseCase
 	getCategoryUseCase         usecases.GetCategoryUseCase
@@ -34,7 +35,11 @@ var (
 	deleteFolderUseCase      usecases.DeleteFolderUseCase
 	checkFolderExistsUseCase usecases.CheckFolderExistUseCase
 
-	loadFileUseCase usecases.LoadFileUseCases
+	createFileUseCase      usecases.CreateFileUseCases
+	getFileUseCase         usecases.GetFileUseCase
+	getAllFilesUseCase     usecases.GetAllFilesUseCase
+	deleteFileUseCase      usecases.DeleteFileUseCase
+	checkFileExistsUseCase usecases.CheckFileExistsUseCase
 )
 
 func Run() {
@@ -92,22 +97,28 @@ func initRepositories() {
 
 	categoryRepository = repositories.NewCategoryDataRepository(collection)
 	folderRepository = repositories.NewFolderMongoRepository(collection)
+	fileRepository = repositories.NewFileMongoRepository(collection)
 }
 
 func initUseCases() {
 	createCategoryUseCase = usecases.NewCreateCategoryUseCase(categoryRepository)
 	getCategoryUseCase = usecases.NewGetCategory(categoryRepository)
 	getAllCategoriesUseCase = usecases.NewGetAllCategory(categoryRepository)
-	deleteCategoryUseCase = usecases.NewDeleteCategoryUseCase(categoryRepository)
+	deleteCategoryUseCase = usecases.NewDeleteCategoryUseCase(minioClient, categoryRepository, folderRepository, fileRepository)
 	checkCategoryExistsUseCase = usecases.NewCheckCategoryExist(categoryRepository)
 
 	createFolderUseCase = usecases.NewCreateFolderUseCase(categoryRepository, folderRepository)
 	getFolderUseCase = usecases.NewSelectFolderUseCase(categoryRepository, folderRepository)
 	getAllFoldersUseCase = usecases.NewSelectFoldersUseCase(categoryRepository, folderRepository)
-	deleteFolderUseCase = usecases.NewDeleteFolderUseCase(categoryRepository, folderRepository)
+	deleteFolderUseCase = usecases.NewDeleteFolderUseCase(minioClient, folderRepository, fileRepository)
 	checkFolderExistsUseCase = usecases.NewCheckFolderExistUseCase(categoryRepository, folderRepository)
 
-	loadFileUseCase = usecases.NewLoadFileUseCase(minioClient)
+	createFileUseCase = usecases.NewCreateFileUseCase(minioClient, fileRepository)
+	getFileUseCase = usecases.NewGetFileUseCase(minioClient, fileRepository)
+	getAllFilesUseCase = usecases.NewGetAllFilesUseCase(minioClient, fileRepository)
+	deleteFileUseCase = usecases.NewDeleteFileUseCase(minioClient, fileRepository)
+	checkFileExistsUseCase = usecases.NewCheckFileExistsUseCase(categoryRepository, folderRepository, fileRepository)
+
 }
 
 func runServer() {
@@ -126,7 +137,11 @@ func runServer() {
 	http2.NewDeleteFolderController(router, deleteFolderUseCase, mw)
 	http2.NewCheckFolderExistController(router, checkFolderExistsUseCase, mw)
 
-	http2.NewLoadFileController(router, loadFileUseCase, mw)
+	http2.NewCreateFileController(router, createFileUseCase, mw)
+	http2.NewGetFileController(router, getFileUseCase, mw)
+	http2.NewGetAllFilesUseCase(router, getAllFilesUseCase, mw)
+	http2.NewDeleteFileController(router, deleteFileUseCase, mw)
+	http2.NewCheckFileExistsUseCase(router, checkFileExistsUseCase, mw)
 
 	address := fmt.Sprintf("%s:%s", cfg.HTTP.Host, cfg.HTTP.Port)
 	fmt.Printf("starting server at %s\n", address)

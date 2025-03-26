@@ -9,25 +9,23 @@ import (
 	"github.com/prolgrammer/BM_package/middleware"
 )
 
-type createFolderController struct {
-	createFolderUseCase usecases.CreateFolderUseCase
+type checkFileExistsController struct {
+	checkFileExistsUseCase usecases.CheckFileExistsUseCase
 }
 
-func NewCreateFolderController(
+func NewCheckFileExistsUseCase(
 	engine *gin.Engine,
-	createFolder usecases.CreateFolderUseCase,
+	checkFileExistsUseCase usecases.CheckFileExistsUseCase,
 	middleware middleware.Middleware,
 ) {
-	cf := &createFolderController{
-		createFolderUseCase: createFolder,
+	cf := &checkFileExistsController{
+		checkFileExistsUseCase: checkFileExistsUseCase,
 	}
 
-	engine.POST("/app/folder", middleware.Authenticate, cf.CreateFolder, middleware.HandleErrors)
+	engine.GET("app/file/exists", middleware.Authenticate, cf.CheckFileExists, middleware.HandleErrors)
 }
 
-func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
-	fmt.Println("create folder")
-
+func (cf *checkFileExistsController) CheckFileExists(ctx *gin.Context) {
 	accountId, exists := ctx.Get("account_id")
 	if !exists {
 		wrappedError := fmt.Errorf("%w", e.ErrAuthenticated)
@@ -35,20 +33,20 @@ func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
 		return
 	}
 
-	var req requests.Folder
+	var req requests.File
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrappedError := fmt.Errorf("%w: %w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
-	err := cf.createFolderUseCase.CreateFolder(ctx, accountId.(string), req)
+	exists, err := cf.checkFileExistsUseCase.CheckFileExists(ctx, accountId.(string), req)
 	if err != nil {
-		wrappedError := fmt.Errorf("there was a problem during create folder: %w", err)
+		wrappedError := fmt.Errorf("failed to check file existence: %w", err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
-
 	ctx.JSON(200, gin.H{
-		"answer": "folder create successful"})
+		"exists": exists,
+	})
 }

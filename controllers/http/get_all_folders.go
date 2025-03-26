@@ -22,7 +22,7 @@ func NewGetAllFoldersController(
 		getAllFoldersUseCase: getAllFoldersUseCase,
 	}
 
-	engine.GET("/app/folder/all/get", middleware.Authenticate, gaf.GetAllFolders, middleware.HandleErrors)
+	engine.GET("/app/folders", middleware.Authenticate, gaf.GetAllFolders, middleware.HandleErrors)
 }
 
 func (gaf *getAllFoldersController) GetAllFolders(ctx *gin.Context) {

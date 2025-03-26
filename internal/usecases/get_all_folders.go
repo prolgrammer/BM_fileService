@@ -17,13 +17,13 @@ type SelectFoldersUseCase interface {
 }
 
 func NewSelectFoldersUseCase(categoryRepository repositories.CategoryRepository, folderRepository repositories.FolderRepository) SelectFoldersUseCase {
-	return selectFoldersUseCase{
+	return &selectFoldersUseCase{
 		categoryRepository: categoryRepository,
 		folderRepository:   folderRepository,
 	}
 }
 
-func (s selectFoldersUseCase) SelectFolders(ctx context.Context, accountId string, request requests.Category) ([]responses.Folder, error) {
+func (s *selectFoldersUseCase) SelectFolders(ctx context.Context, accountId string, request requests.Category) ([]responses.Folder, error) {
 	_, err := s.categoryRepository.SelectCategory(ctx, accountId, request.Name)
 	if err != nil {
 		return nil, err

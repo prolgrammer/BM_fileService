@@ -23,7 +23,7 @@ func NewCreateCategoryController(
 		createCategory: createCategory,
 	}
 
-	engine.POST("/app/category/create", middleware.Authenticate, cc.CreateCategory, middleware.HandleErrors)
+	engine.POST("/app/category", middleware.Authenticate, cc.CreateCategory, middleware.HandleErrors)
 }
 
 func (cc *createCategoryController) CreateCategory(ctx *gin.Context) {

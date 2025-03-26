@@ -23,7 +23,7 @@ func NewGetAllCategoriesUseCases(
 		getAllCategoriesUseCase: getAllCategoriesUseCase,
 	}
 
-	engine.GET("/app/category/all/get", middleware.Authenticate, gac.GetAllCategories, middleware.HandleErrors)
+	engine.GET("/app/categories", middleware.Authenticate, gac.GetAllCategories, middleware.HandleErrors)
 }
 
 func (gac *getAllCategories) GetAllCategories(ctx *gin.Context) {
