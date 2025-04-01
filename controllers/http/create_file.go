@@ -22,7 +22,7 @@ func NewCreateFileController(
 		createFileUseCases: createFileUseCases,
 	}
 
-	engine.POST("app/file", middleware.Authenticate, cf.CreateFile, middleware.HandleErrors)
+	engine.POST("/app/file", middleware.Authenticate, cf.CreateFile, middleware.HandleErrors)
 }
 
 func (cf *createFileController) CreateFile(ctx *gin.Context) {
@@ -34,11 +34,12 @@ func (cf *createFileController) CreateFile(ctx *gin.Context) {
 	}
 
 	var req requests.CreateFile
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	if err := ctx.ShouldBind(&req); err != nil {
 		wrappedError := fmt.Errorf("%w: %w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
+	fmt.Println("req:", req)
 
 	err := cf.createFileUseCases.CreateFile(ctx, accountId.(string), req)
 	if err != nil {

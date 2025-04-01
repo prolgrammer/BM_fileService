@@ -4,6 +4,7 @@ import (
 	"app/internal/entities"
 	"context"
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -89,6 +90,8 @@ func (f *fileMongoRepository) SelectFile(ctx context.Context, userId, categoryNa
 }
 
 func (f *fileMongoRepository) SelectFiles(ctx context.Context, userId, categoryName, folderName string) ([]entities.File, error) {
+	fmt.Println("Repository categoryName", categoryName)
+	fmt.Println("Repository folderName", folderName)
 	pipeline := []bson.M{
 		{
 			"$match": bson.M{
@@ -108,9 +111,12 @@ func (f *fileMongoRepository) SelectFiles(ctx context.Context, userId, categoryN
 		{
 			"$project": bson.M{
 				"files": "$folders.files",
+				"_id":   0,
 			},
 		},
 	}
+
+	fmt.Println(pipeline)
 
 	cursor, err := f.collection.Aggregate(ctx, pipeline)
 	if err != nil {

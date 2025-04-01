@@ -16,7 +16,7 @@ type getAllFiles struct {
 }
 
 type GetAllFilesUseCase interface {
-	GetAllFiles(ctx context.Context, accountId string, req requests.File) ([]responses.File, error)
+	GetAllFiles(ctx context.Context, accountId string, req requests.Folder) ([]responses.File, error)
 }
 
 func NewGetAllFilesUseCase(
@@ -28,8 +28,8 @@ func NewGetAllFilesUseCase(
 		fileRepository: fileRepository}
 }
 
-func (g *getAllFiles) GetAllFiles(ctx context.Context, accountId string, req requests.File) ([]responses.File, error) {
-	files, err := g.fileRepository.SelectFiles(ctx, accountId, req.Category.Name, req.Folder.Name)
+func (g *getAllFiles) GetAllFiles(ctx context.Context, accountId string, req requests.Folder) ([]responses.File, error) {
+	files, err := g.fileRepository.SelectFiles(ctx, accountId, req.Category.Name, req.Name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get files list: %w", err)
 	}

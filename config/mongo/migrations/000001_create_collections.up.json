@@ -1,34 +1,65 @@
 [
   {
-    "create": "categories",
+    "create": "users",
+    "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["_id", "categories"],
+          "properties": {
+            "_id": {"bsonType":  "string"},
+            "categories": {
+              "bsonType": "array",
+              "items": {
+                "bsonType": "object",
+                "required": ["_id", "name", "folders"],
+                "properties": {
+                  "_id": {"bsonType": "string"},
+                  "name": {"bsonType": "string"},
+                  "folders": {
+                    "bsonType": "array",
+                    "items": {
+                      "bsonType": "object",
+                      "required": ["name"],
+                      "properties": {
+                        "name": {"bsonType": "string"}
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+    }
+  },
+  {
+    "create": "files",
     "validator": {
       "$jsonSchema": {
         "bsonType": "object",
-        "required": ["_id", "user_id", "name", "folders"],
+        "required": ["_id", "name", "size", "type", "version", "created_at", "categories"],
         "properties": {
           "_id": {"bsonType": "string"},
-          "user_id": {"bsonType": "string"},
           "name": {"bsonType":  "string"},
-          "folders": {
+          "description": {"bsonType": "string"},
+          "size": {"bsonType": "string"},
+          "type": {"bsonType": "string"},
+          "version": {"bsonType": "string"},
+          "created_at": {"bsonType": "date"},
+          "categories": {
             "bsonType": "array",
             "items": {
               "bsonType": "object",
-              "required": ["_id", "name", "files"],
+              "required": ["category_id", "folders"],
               "properties": {
-                "_id": {"bsonType": "string"},
-                "name": {"bsonType": "string"},
-                "files": {
+                "category_id": {"bsonType": "string"},
+                "folders": {
                   "bsonType": "array",
                   "items": {
                     "bsonType": "object",
-                    "required": ["_id", "name", "path", "size", "type", "created_at"],
+                    "required": ["name"],
                     "properties": {
-                      "_id": {"bsonType":  "string"},
-                      "name": {"bsonType": "string"},
-                      "path": {"bsonType": "string"},
-                      "size": {"bsonType": "int"},
-                      "type": {"bsonType": "string"},
-                      "created_at": {"bsonType": "date"}
+                      "name": {"bsonType": "string"}
                     }
                   }
                 }
@@ -40,3 +71,4 @@
     }
   }
 ]
+

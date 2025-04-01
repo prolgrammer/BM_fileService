@@ -22,7 +22,7 @@ func NewGetFileController(
 		getFileUseCase: getFileUseCase,
 	}
 
-	engine.GET("app/file", middleware.Authenticate, gf.GetFile, middleware.HandleErrors)
+	engine.GET("/app/file", middleware.Authenticate, gf.GetFile, middleware.HandleErrors)
 }
 
 func (gf *getFileController) GetFile(ctx *gin.Context) {

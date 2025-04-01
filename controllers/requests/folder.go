@@ -1,6 +1,6 @@
 package requests
 
 type Folder struct {
-	Category `json:"category"`
-	Name     string `json:"name"`
+	Category `json:"category" form:"category"`
+	Name     string `json:"name" form:"folder[name]"`
 }

@@ -4,8 +4,10 @@ import (
 	"app/internal/entities"
 	"context"
 	"errors"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type categoryMongoRepository struct {
@@ -18,50 +20,53 @@ func NewCategoryDataRepository(collection *mongo.Collection) CategoryRepository 
 
 func (m *categoryMongoRepository) CreateCategory(ctx context.Context, userId, categoryName string) error {
 	category := entities.Category{
+		Id:      uuid.New().String(),
 		Name:    categoryName,
-		UserId:  userId,
 		Folders: []entities.Folder{},
 	}
 
-	_, err := m.collection.InsertOne(ctx, category)
+	filter := bson.M{"_id": userId}
+	update := bson.M{"$push": bson.M{"categories": category}}
+	_, err := m.collection.UpdateOne(ctx, filter, update)
 
 	return err
 }
 
 func (m *categoryMongoRepository) SelectCategory(ctx context.Context, userId, categoryName string) (entities.Category, error) {
 	var category entities.Category
-	filer := bson.M{"user_id": userId, "name": categoryName}
+	filer := bson.M{"_id": userId, "categories.name": categoryName}
+	opts := options.FindOne().SetProjection(bson.M{"categories.$": 1})
 
-	err := m.collection.FindOne(ctx, filer).Decode(&category)
+	err := m.collection.FindOne(ctx, filer, opts).Decode(&category)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return entities.Category{}, ErrCategoryNotFound
 		}
-		return category, err
+		return entities.Category{}, err
 	}
 
 	return category, nil
 }
 
 func (m *categoryMongoRepository) SelectAllCategories(ctx context.Context, userId string) ([]entities.Category, error) {
-	filer := bson.M{"user_id": userId}
+	filer := bson.M{"_id": userId}
 	cursor, err := m.collection.Find(ctx, filer)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var categories []entities.Category
-	err = cursor.All(ctx, &categories)
+	var account entities.Account
+	err = cursor.All(ctx, &account)
 	if err != nil {
 		return nil, err
 	}
 
-	return categories, nil
+	return account.Categories, nil
 }
 
-func (m *categoryMongoRepository) DeleteCategory(ctx context.Context, userId, category string) error {
-	filer := bson.M{"user_id": userId, "name": category}
+func (m *categoryMongoRepository) DeleteCategory(ctx context.Context, userId, categoryName string) error {
+	filer := bson.M{"_id": userId, "categories.name": categoryName}
 	_, err := m.collection.DeleteOne(ctx, filer)
 
 	if err != nil {
@@ -72,7 +77,7 @@ func (m *categoryMongoRepository) DeleteCategory(ctx context.Context, userId, ca
 }
 
 func (m *categoryMongoRepository) CheckCategoryExists(ctx context.Context, userId, categoryName string) (bool, error) {
-	filer := bson.M{"user_id": userId, "name": categoryName}
+	filer := bson.M{"_id": userId, "categories.name": categoryName}
 	err := m.collection.FindOne(ctx, filer).Err()
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {

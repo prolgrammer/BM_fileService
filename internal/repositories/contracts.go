@@ -6,6 +6,10 @@ import (
 )
 
 type (
+	AccountRepository interface {
+		CreateAccount(ctx context.Context, userId string) error
+	}
+
 	CategoryRepository interface {
 		CreateCategory(ctx context.Context, userId, category string) error
 		SelectCategory(ctx context.Context, userId, category string) (entities.Category, error)

@@ -23,7 +23,7 @@ func NewGetAllFilesUseCase(
 		getAllFilesUseCase: getAllFilesUseCase,
 	}
 
-	engine.GET("app/files", middleware.Authenticate, gaf.GetAllFiles, middleware.HandleErrors)
+	engine.GET("/app/files", middleware.Authenticate, gaf.GetAllFiles, middleware.HandleErrors)
 }
 
 func (gaf *getAllFilesController) GetAllFiles(ctx *gin.Context) {
@@ -34,13 +34,14 @@ func (gaf *getAllFilesController) GetAllFiles(ctx *gin.Context) {
 		return
 	}
 
-	var req requests.File
+	var req requests.Folder
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		wrappedError := fmt.Errorf("%w: %w", e.ErrDataBindError, err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}
 
+	fmt.Println(req)
 	files, err := gaf.getAllFilesUseCase.GetAllFiles(ctx, accountId.(string), req)
 	if err != nil {
 		wrappedError := fmt.Errorf("failed to get filesL %w", err)

@@ -22,7 +22,7 @@ func NewCheckFileExistsUseCase(
 		checkFileExistsUseCase: checkFileExistsUseCase,
 	}
 
-	engine.GET("app/file/exists", middleware.Authenticate, cf.CheckFileExists, middleware.HandleErrors)
+	engine.GET("/app/file/exists", middleware.Authenticate, cf.CheckFileExists, middleware.HandleErrors)
 }
 
 func (cf *checkFileExistsController) CheckFileExists(ctx *gin.Context) {
