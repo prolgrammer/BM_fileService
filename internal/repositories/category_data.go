@@ -49,16 +49,13 @@ func (m *categoryMongoRepository) SelectCategory(ctx context.Context, userId, ca
 }
 
 func (m *categoryMongoRepository) SelectAllCategories(ctx context.Context, userId string) ([]entities.Category, error) {
-	filer := bson.M{"_id": userId}
-	cursor, err := m.collection.Find(ctx, filer)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
 	var account entities.Account
-	err = cursor.All(ctx, &account)
+	filer := bson.M{"_id": userId}
+	err := m.collection.FindOne(ctx, filer).Decode(&account)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, ErrCategoryNotFound
+		}
 		return nil, err
 	}
 

@@ -20,14 +20,14 @@ func NewFolderMongoRepository(collection *mongo.Collection) FolderRepository {
 }
 
 func (f folderMongoRepository) CreateFolder(ctx context.Context, userId, categoryName, folderName string) error {
-	filter := bson.M{"user_id": userId, "name": categoryName}
-
-	newFolder := entities.Folder{
-		Name:  folderName,
-		Files: []entities.File{},
+	filter := bson.M{
+		"_id":             userId,
+		"categories.name": categoryName,
 	}
 
-	update := bson.M{"$push": bson.M{"folders": newFolder}}
+	newFolder := entities.CreateFolder(folderName)
+
+	update := bson.M{"$push": bson.M{"categories.folders.$": newFolder}}
 
 	_, err := f.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -38,11 +38,11 @@ func (f folderMongoRepository) CreateFolder(ctx context.Context, userId, categor
 }
 
 func (f folderMongoRepository) SelectFolder(ctx context.Context, userId, categoryName, folderName string) (entities.Folder, error) {
-	var category entities.Category
-	filter := bson.M{"user_id": userId, "name": categoryName, "folders.name": folderName}
-	projection := bson.M{"folders.$": 1}
+	var folder entities.Folder
+	filter := bson.M{"_id": userId, "categories.name": categoryName, "categories.folders.name": folderName}
+	projection := bson.M{"categories.folders.$": 1}
 
-	err := f.collection.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&category)
+	err := f.collection.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&folder)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
 			return entities.Folder{}, ErrFolderNotFound
@@ -50,30 +50,36 @@ func (f folderMongoRepository) SelectFolder(ctx context.Context, userId, categor
 		return entities.Folder{}, err
 	}
 
-	if len(category.Folders) == 0 {
-		return entities.Folder{}, ErrFolderNotFound
-	}
-
-	return category.Folders[0], nil
+	return folder, nil
 }
 
 func (f folderMongoRepository) SelectFolders(ctx context.Context, userId, categoryName string) ([]entities.Folder, error) {
-	var category entities.Category
-	filter := bson.M{"user_id": userId, "name": categoryName}
+	var folders []entities.Folder
+	filter := bson.M{"_id": userId, "categories.name": categoryName}
 
-	err := f.collection.FindOne(ctx, filter).Decode(&category)
+	cursor, err := f.collection.Find(ctx, filter)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return nil, ErrCategoryNotFound
+		return nil, ErrCategoryNotFound
+	}
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var folder entities.Folder
+		err := cursor.Decode(&folder)
+		if err != nil {
+			return nil, err
 		}
+		folders = append(folders, folder)
 	}
 
-	return category.Folders, nil
+	return folders, nil
 }
 
 func (f folderMongoRepository) DeleteFolder(ctx context.Context, userId, categoryName, folderName string) error {
-	filter := bson.M{"user_id": userId, "name": categoryName, "folders.name": folderName}
-	update := bson.M{"$pull": bson.M{"folders": bson.M{"name": folderName}}}
+	filter := bson.M{"_id": userId, "categories.name": categoryName, "categories.folders.name": folderName}
+	update := bson.M{"$pull": bson.M{
+		"categories.$.folders": bson.M{"name": folderName},
+	}}
 
 	res, err := f.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -88,7 +94,7 @@ func (f folderMongoRepository) DeleteFolder(ctx context.Context, userId, categor
 }
 
 func (f folderMongoRepository) CheckFolderExists(ctx context.Context, userId, categoryName, folderName string) (bool, error) {
-	filter := bson.M{"user_id": userId, "name": categoryName, "folders.name": folderName}
+	filter := bson.M{"_id": userId, "categories.name": categoryName, "categories.folders.name": folderName}
 	err := f.collection.FindOne(ctx, filter).Err()
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {

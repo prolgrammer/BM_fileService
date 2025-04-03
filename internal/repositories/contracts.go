@@ -27,10 +27,10 @@ type (
 	}
 
 	FileRepository interface {
-		CreateFile(ctx context.Context, userId, category, folderName string, data entities.File) error
-		SelectFile(ctx context.Context, userId, category, folderName, nameFile string) (entities.File, error)
-		SelectFiles(ctx context.Context, userId, category, folderName string) ([]entities.File, error)
-		DeleteFile(ctx context.Context, userId, category, folderName, fileName string) error
-		CheckFileExists(ctx context.Context, userId, category, folderName, fileName string) (bool, error)
+		CreateFile(ctx context.Context, data entities.File) error
+		SelectFile(ctx context.Context, categoryId, folderName, fileName string) (entities.File, error)
+		SelectFiles(ctx context.Context, categoryId, folderName string) ([]entities.File, error)
+		DeleteFile(ctx context.Context, categoryId, folderName, fileName string) error
+		CheckFileExists(ctx context.Context, categoryId, folderName, fileName string) (bool, error)
 	}
 )

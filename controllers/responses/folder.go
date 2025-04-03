@@ -1,21 +1,12 @@
 package responses
 
-import "app/internal/entities"
-
 type Folder struct {
-	Name  string `json:"name" bson:"name"`
-	Files []File `json:"files" bson:"files"`
+	Name string `json:"name" bson:"name"`
 }
 
-func NewFolder(name string, files []entities.File) Folder {
-	filesResponse := make([]File, len(files))
-	for j, file := range files {
-		filesResponse[j] = NewFile(file)
-	}
-
+func NewFolder(name string) Folder {
 	return Folder{
-		Name:  name,
-		Files: filesResponse,
+		Name: name,
 	}
 
 }

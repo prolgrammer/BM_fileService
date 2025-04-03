@@ -21,7 +21,7 @@ func NewCreateFolderUseCase(categoryRepository repositories.CategoryRepository, 
 		folderRepository:   folderRepository}
 }
 
-func (c *createFolderUseCase) CreateFolder(ctx context.Context, accountId string, request requests.Folder) error {
+func (c *createFolderUseCase) CreateFolder(ctx context.Context, accountId string, request requests.Folder) error { //TODO
 	category, err := c.categoryRepository.SelectCategory(ctx, accountId, request.Category.Name)
 	if err != nil {
 		return err

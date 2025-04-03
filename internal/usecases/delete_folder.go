@@ -30,7 +30,7 @@ func NewDeleteFolderUseCase(
 	}
 }
 
-func (uc *deleteFolderUseCase) DeleteFolder(ctx context.Context, accountId string, req requests.Folder) error {
+func (uc *deleteFolderUseCase) DeleteFolder(ctx context.Context, accountId string, req requests.Folder) error { //TODO
 	files, err := uc.fileRepository.SelectFiles(ctx, accountId, req.Category.Name, req.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get folder files: %w", err)

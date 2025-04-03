@@ -28,16 +28,22 @@ func NewCheckFileExistsUseCase(
 }
 
 func (c *checkFileExistsUseCase) CheckFileExists(ctx context.Context, accountId string, request requests.File) (bool, error) {
-	_, err := c.categoryRepository.SelectCategory(ctx, accountId, request.Category.Name)
+	category, err := c.categoryRepository.SelectCategory(ctx, accountId, request.Category.Name)
 	if err != nil {
 		return false, err
 	}
 
-	folderExists, err := c.folderRepository.CheckFolderExists(ctx, accountId, request.Category.Name, request.Folder.Name)
-	if err != nil || !folderExists {
-		return false, err
+	folderExist := false
+	for _, folder := range category.Folders {
+		if folder.Name == request.Folder.Name {
+			folderExist = true
+			break
+		}
 	}
 
-	return c.fileRepository.CheckFileExists(ctx, accountId, request.Category.Name, request.Folder.Name, request.Name)
+	if !folderExist {
+		return false, repositories.ErrFolderNotFound
+	}
 
+	return c.fileRepository.CheckFileExists(ctx, category.Id, request.Folder.Name, request.Name)
 }

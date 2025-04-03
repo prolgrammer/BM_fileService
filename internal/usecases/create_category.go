@@ -21,6 +21,7 @@ func NewCreateCategoryUseCase(
 		categoryRepository: categoryRepository,
 	}
 }
+
 func (uc *createCategory) CreateCategory(ctx context.Context, accountId string, req requests.Category) error {
 	exists, err := uc.categoryRepository.CheckCategoryExists(ctx, accountId, req.Name)
 	if err != nil {

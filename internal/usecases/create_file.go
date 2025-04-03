@@ -16,20 +16,34 @@ type CreateFileUseCases interface {
 }
 
 type createFileUseCase struct {
-	minio          *m.Client
-	fileRepository repositories.FileRepository
+	minio              *m.Client
+	categoryRepository repositories.CategoryRepository
+	folderRepository   repositories.FolderRepository
+	fileRepository     repositories.FileRepository
 }
 
-func NewCreateFileUseCase(minio *m.Client, fileRepository repositories.FileRepository) CreateFileUseCases {
+func NewCreateFileUseCase(minio *m.Client, categoryRepository repositories.CategoryRepository, folderRepository repositories.FolderRepository, fileRepository repositories.FileRepository) CreateFileUseCases {
 	return &createFileUseCase{
-		minio,
-		fileRepository,
+		minio:              minio,
+		categoryRepository: categoryRepository,
+		folderRepository:   folderRepository,
+		fileRepository:     fileRepository,
 	}
 }
 
-func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, req requests.CreateFile) error {
+func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, req requests.CreateFile) error { //TODO
 	if len(req.Files) == 0 {
 		return fmt.Errorf("no files prodied")
+	}
+
+	category, err := uc.categoryRepository.SelectCategory(ctx, accountId, req.Category.Name)
+	if err != nil {
+		return err
+	}
+
+	_, err = uc.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Folder.Name)
+	if err != nil {
+		return err
 	}
 
 	for _, fileHeader := range req.Files {
@@ -39,7 +53,7 @@ func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, r
 		}
 		defer file.Close()
 
-		objectName := fmt.Sprintf("%s/%s/%s/%s", accountId, req.Category.Name, req.Folder.Name, fileHeader.Filename)
+		objectName := fmt.Sprintf("%s/%s/%s", accountId, req.Version, fileHeader.Filename)
 
 		_, err = uc.minio.MinioClient.PutObject(
 			ctx,
@@ -55,18 +69,25 @@ func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, r
 		fmt.Printf("file uploaded successfully to minio: %s\n", fileHeader.Filename)
 
 		fileEntity := entities.File{
-			Name:      fileHeader.Filename,
-			Path:      objectName,
-			Size:      int(fileHeader.Size),
-			Type:      fileHeader.Header.Get("Content-Type"),
+			Name:    fileHeader.Filename,
+			Size:    int(fileHeader.Size),
+			Type:    fileHeader.Header.Get("Content-Type"),
+			Version: req.Version,
+			Categories: []entities.FileCategory{
+				{
+					CategoryId: category.Id,
+					Folders: []entities.Folder{
+						{
+							req.Folder.Name,
+						},
+					},
+				},
+			},
 			CreatedAt: time.Now(),
 		}
 
 		err = uc.fileRepository.CreateFile(
 			ctx,
-			accountId,
-			req.Category.Name,
-			req.Folder.Name,
 			fileEntity,
 		)
 		if err != nil {

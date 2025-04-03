@@ -29,12 +29,12 @@ func NewDeleteFileUseCase(
 }
 
 func (d *deleteFileUseCase) DeleteFile(ctx context.Context, accountId string, req requests.File) error {
-	file, err := d.fileRepository.SelectFile(ctx, accountId, req.Category.Name, req.Folder.Name, req.Name)
+	file, err := d.fileRepository.SelectFile(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get file info: %w", err)
 	}
 
-	err = d.minio.MinioClient.RemoveObject(ctx, d.minio.BucketName, file.Path, minio.RemoveObjectOptions{})
+	err = d.minio.MinioClient.RemoveObject(ctx, d.minio.BucketName, file.Name, minio.RemoveObjectOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to delete file from minio: %w", err)
 	}

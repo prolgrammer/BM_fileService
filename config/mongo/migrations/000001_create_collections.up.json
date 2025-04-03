@@ -42,7 +42,7 @@
           "_id": {"bsonType": "string"},
           "name": {"bsonType":  "string"},
           "description": {"bsonType": "string"},
-          "size": {"bsonType": "string"},
+          "size": {"bsonType": "int"},
           "type": {"bsonType": "string"},
           "version": {"bsonType": "string"},
           "created_at": {"bsonType": "date"},

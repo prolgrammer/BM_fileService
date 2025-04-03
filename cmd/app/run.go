@@ -113,7 +113,7 @@ func initUseCases() {
 	deleteFolderUseCase = usecases.NewDeleteFolderUseCase(minioClient, folderRepository, fileRepository)
 	checkFolderExistsUseCase = usecases.NewCheckFolderExistUseCase(categoryRepository, folderRepository)
 
-	createFileUseCase = usecases.NewCreateFileUseCase(minioClient, fileRepository)
+	createFileUseCase = usecases.NewCreateFileUseCase(minioClient, categoryRepository, folderRepository, fileRepository)
 	getFileUseCase = usecases.NewGetFileUseCase(minioClient, fileRepository)
 	getAllFilesUseCase = usecases.NewGetAllFilesUseCase(minioClient, fileRepository)
 	deleteFileUseCase = usecases.NewDeleteFileUseCase(minioClient, fileRepository)

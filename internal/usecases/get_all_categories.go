@@ -28,7 +28,7 @@ func (uc *getAllCategory) GetAllCategory(ctx context.Context, accountId string) 
 
 	respCategories := make([]responses.Category, len(categories))
 	for i, category := range categories {
-		respCategories[i] = responses.NewCategory(category.Name, category.UserId, category.Folders)
+		respCategories[i] = responses.NewCategory(category.Name, accountId, category.Folders)
 	}
 
 	return respCategories, nil

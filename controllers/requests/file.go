@@ -8,6 +8,7 @@ type File struct {
 }
 
 type CreateFile struct {
-	Folder `form:"folder"`
-	Files  []*multipart.FileHeader `form:"files"`
+	Folder  `form:"folder"`
+	Version string                  `form:"version"`
+	Files   []*multipart.FileHeader `form:"files"`
 }

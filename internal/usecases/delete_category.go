@@ -35,7 +35,7 @@ func NewDeleteCategoryUseCase(
 	}
 }
 
-func (uc *deleteCategory) DeleteCategory(ctx context.Context, accountId string, req requests.Category) error {
+func (uc *deleteCategory) DeleteCategory(ctx context.Context, accountId string, req requests.Category) error { //TODO
 	folders, err := uc.folderRepository.SelectFolders(ctx, accountId, req.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get category folders: %w", err)

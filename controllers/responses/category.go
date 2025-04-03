@@ -11,7 +11,7 @@ type Category struct {
 func NewCategory(Name, UserId string, folders []entities.Folder) Category {
 	respFolders := make([]Folder, len(folders))
 	for i, folder := range folders {
-		respFolders[i] = NewFolder(folder.Name, folder.Files)
+		respFolders[i] = NewFolder(folder.Name)
 	}
 
 	return Category{
