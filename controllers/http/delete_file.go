@@ -22,7 +22,7 @@ func NewDeleteFileController(
 		deleteFileUseCase: deleteFileUseCase,
 	}
 
-	engine.DELETE("/app/file/delete", middleware.Authenticate, df.DeleteFile, middleware.HandleErrors)
+	engine.POST("/app/file/delete", middleware.Authenticate, df.DeleteFile, middleware.HandleErrors)
 }
 
 func (df *deleteFileController) DeleteFile(ctx *gin.Context) {

@@ -44,7 +44,7 @@ func (gaf *getAllFilesController) GetAllFiles(ctx *gin.Context) {
 	fmt.Println(req)
 	files, err := gaf.getAllFilesUseCase.GetAllFiles(ctx, accountId.(string), req)
 	if err != nil {
-		wrappedError := fmt.Errorf("failed to get filesL %w", err)
+		wrappedError := fmt.Errorf("failed to get files: %w", err)
 		middleware.AddGinError(ctx, wrappedError)
 		return
 	}

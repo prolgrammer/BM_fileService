@@ -31,9 +31,11 @@ type (
 	FileRepository interface {
 		CreateFile(ctx context.Context, data entities.File) error
 		SelectFile(ctx context.Context, categoryId, folderName, fileName string) (entities.File, error)
+		SelectFileByNameAndVersion(ctx context.Context, categoryId, name, version string) (entities.File, error)
 		SelectFiles(ctx context.Context, categoryId, folderName string) ([]entities.File, error)
 		UpdateFile(ctx context.Context, file entities.File) error
-		DeleteFile(ctx context.Context, categoryId, folderName, fileName string) error
+		DeleteFile(ctx context.Context, fileId string) error
 		CheckFileExists(ctx context.Context, categoryId, folderName, fileName string) (bool, error)
+		CheckFileExistsByNameAndVersion(ctx context.Context, name, version string) (bool, error)
 	}
 )

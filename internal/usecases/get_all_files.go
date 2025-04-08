@@ -40,9 +40,12 @@ func (g *getAllFiles) GetAllFiles(ctx context.Context, accountId string, req req
 		return nil, fmt.Errorf("category not found in database: %w", err)
 	}
 
-	_, err = g.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Name)
+	exists, err := g.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Name)
+	if !exists {
+		return nil, repositories.ErrFolderNotFound
+	}
 	if err != nil {
-		return nil, fmt.Errorf("folder not found in database: %w", err)
+		return nil, err
 	}
 
 	files, err := g.fileRepository.SelectFiles(ctx, category.Id, req.Name)
@@ -50,7 +53,7 @@ func (g *getAllFiles) GetAllFiles(ctx context.Context, accountId string, req req
 		return nil, fmt.Errorf("failed to get files list: %w", err)
 	}
 
-	result := make([]responses.File, len(files))
+	result := make([]responses.File, 0, len(files))
 	for _, file := range files {
 		objectName := fmt.Sprintf("%s/%s/%s", accountId, file.Version, file.Name)
 		fileUrl, err := g.minio.MinioClient.PresignedGetObject(

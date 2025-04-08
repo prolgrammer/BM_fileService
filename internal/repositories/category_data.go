@@ -4,10 +4,10 @@ import (
 	"app/internal/entities"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type categoryMongoRepository struct {
@@ -33,17 +33,44 @@ func (m *categoryMongoRepository) CreateCategory(ctx context.Context, userId, ca
 }
 
 func (m *categoryMongoRepository) SelectCategory(ctx context.Context, userId, categoryName string) (entities.Category, error) {
-	var category entities.Category
-	filer := bson.M{"_id": userId, "categories.name": categoryName}
-	opts := options.FindOne().SetProjection(bson.M{"categories.$": 1})
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"_id":             userId,
+				"categories.name": categoryName,
+			},
+		},
+		{
+			"$unwind": "$categories",
+		},
+		{
+			"$match": bson.M{
+				"categories.name": categoryName,
+			},
+		},
+		{
+			"$replaceRoot": bson.M{
+				"newRoot": "$categories",
+			},
+		},
+	}
 
-	err := m.collection.FindOne(ctx, filer, opts).Decode(&category)
+	cursor, err := m.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return entities.Category{}, ErrCategoryNotFound
-		}
 		return entities.Category{}, err
 	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		return entities.Category{}, ErrCategoryNotFound
+	}
+
+	var category entities.Category
+	if err := cursor.Decode(&category); err != nil {
+		return entities.Category{}, err
+	}
+
+	fmt.Println(category)
 
 	return category, nil
 }
@@ -64,10 +91,15 @@ func (m *categoryMongoRepository) SelectAllCategories(ctx context.Context, userI
 
 func (m *categoryMongoRepository) DeleteCategory(ctx context.Context, userId, categoryName string) error {
 	filer := bson.M{"_id": userId, "categories.name": categoryName}
-	_, err := m.collection.DeleteOne(ctx, filer)
+	update := bson.M{"$pull": bson.M{"categories": bson.M{"name": categoryName}}}
 
+	result, err := m.collection.UpdateOne(ctx, filer, update)
 	if err != nil {
 		return err
+	}
+
+	if result.MatchedCount == 0 {
+		return ErrCategoryNotFound
 	}
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	"app/internal/repositories"
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"time"
 )
@@ -31,7 +32,7 @@ func NewCreateFileUseCase(minio *m.Client, categoryRepository repositories.Categ
 	}
 }
 
-func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, req requests.CreateFile) error { //TODO
+func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, req requests.CreateFile) error {
 	if len(req.Files) == 0 {
 		return fmt.Errorf("no files prodied")
 	}
@@ -41,7 +42,10 @@ func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, r
 		return err
 	}
 
-	_, err = uc.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Folder.Name)
+	exists, err := uc.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Folder.Name)
+	if !exists {
+		return repositories.ErrFolderNotFound
+	}
 	if err != nil {
 		return err
 	}
@@ -68,35 +72,81 @@ func (uc *createFileUseCase) CreateFile(ctx context.Context, accountId string, r
 
 		fmt.Printf("file uploaded successfully to minio: %s\n", fileHeader.Filename)
 
-		fileEntity := entities.File{
-			Name:    fileHeader.Filename,
-			Size:    int(fileHeader.Size),
-			Type:    fileHeader.Header.Get("Content-Type"),
-			Version: req.Version,
-			Categories: []entities.FileCategory{
-				{
+		exists, err := uc.fileRepository.CheckFileExistsByNameAndVersion(ctx, fileHeader.Filename, req.Version)
+		if err != nil {
+			_ = uc.minio.MinioClient.RemoveObject(ctx, uc.minio.BucketName, objectName, minio.RemoveObjectOptions{})
+			return fmt.Errorf("failed to check file existence for %s: %w", fileHeader.Filename, err)
+		}
+
+		if exists {
+			fileEntity, err := uc.fileRepository.SelectFileByNameAndVersion(ctx, category.Id, fileHeader.Filename, req.Version)
+			if err != nil {
+				_ = uc.minio.MinioClient.RemoveObject(ctx, uc.minio.BucketName, objectName, minio.RemoveObjectOptions{})
+				return fmt.Errorf("failed to select file %s: %w", fileHeader.Filename, err)
+			}
+
+			categoryExists := false
+			for i, cat := range fileEntity.Categories {
+				if cat.CategoryId == category.Id {
+					folderExists := false
+					for _, folder := range cat.Folders {
+						if folder.Name == req.Folder.Name {
+							folderExists = true
+							break
+						}
+					}
+					if !folderExists {
+						fileEntity.Categories[i].Folders = append(fileEntity.Categories[i].Folders, entities.CreateFolder(req.Folder.Name))
+					}
+					categoryExists = true
+					break
+				}
+			}
+
+			if !categoryExists {
+				fileEntity.Categories = append(fileEntity.Categories, entities.FileCategory{
 					CategoryId: category.Id,
-					Folders: []entities.Folder{
-						{
-							req.Folder.Name,
+					Folders:    []entities.Folder{{Name: req.Folder.Name}},
+				})
+			}
+
+			err = uc.fileRepository.UpdateFile(ctx, fileEntity)
+			if err != nil {
+				_ = uc.minio.MinioClient.RemoveObject(ctx, uc.minio.BucketName, objectName, minio.RemoveObjectOptions{})
+				return fmt.Errorf("failed to update file %s in database: %w", fileHeader.Filename, err)
+			}
+		} else {
+			fileEntity := entities.File{
+				Id:      uuid.New().String(),
+				Name:    fileHeader.Filename,
+				Size:    int(fileHeader.Size),
+				Type:    fileHeader.Header.Get("Content-Type"),
+				Version: req.Version,
+				Categories: []entities.FileCategory{
+					{
+						CategoryId: category.Id,
+						Folders: []entities.Folder{
+							{
+								req.Folder.Name,
+							},
 						},
 					},
 				},
-			},
-			CreatedAt: time.Now(),
-		}
+				CreatedAt: time.Now(),
+			}
 
-		err = uc.fileRepository.CreateFile(
-			ctx,
-			fileEntity,
-		)
-		if err != nil {
-			_ = uc.minio.MinioClient.RemoveObject(
+			err = uc.fileRepository.CreateFile(
 				ctx,
-				uc.minio.BucketName,
-				objectName,
-				minio.RemoveObjectOptions{})
-			return fmt.Errorf("failed to upload file %s: %w into database", fileHeader.Filename, err)
+				fileEntity,
+			)
+			if err != nil {
+				_ = uc.minio.MinioClient.RemoveObject(
+					ctx,
+					uc.minio.BucketName,
+					objectName,
+					minio.RemoveObjectOptions{})
+				return fmt.Errorf("failed to upload file %s: %w into database", fileHeader.Filename, err)
+			}
 		}
 	}
 

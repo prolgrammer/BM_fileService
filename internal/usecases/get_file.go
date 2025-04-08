@@ -41,9 +41,12 @@ func (g *getFile) GetFile(ctx context.Context, accountId string, req requests.Fi
 		return responses.File{}, fmt.Errorf("category not found in database: %w", err)
 	}
 
-	_, err = g.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Folder.Name)
+	exists, err := g.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Folder.Name)
+	if !exists {
+		return responses.File{}, repositories.ErrFolderNotFound
+	}
 	if err != nil {
-		return responses.File{}, fmt.Errorf("folder not found in database: %w", err)
+		return responses.File{}, err
 	}
 
 	file, err := g.fileRepository.SelectFile(ctx, category.Id, req.Folder.Name, req.Name)

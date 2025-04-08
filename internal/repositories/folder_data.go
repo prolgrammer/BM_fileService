@@ -6,7 +6,6 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type folderMongoRepository struct {
@@ -27,7 +26,7 @@ func (f folderMongoRepository) CreateFolder(ctx context.Context, userId, categor
 
 	newFolder := entities.CreateFolder(folderName)
 
-	update := bson.M{"$push": bson.M{"categories.folders.$": newFolder}}
+	update := bson.M{"$push": bson.M{"categories.$.folders": newFolder}}
 
 	_, err := f.collection.UpdateOne(ctx, filter, update)
 	if err != nil {
@@ -38,15 +37,49 @@ func (f folderMongoRepository) CreateFolder(ctx context.Context, userId, categor
 }
 
 func (f folderMongoRepository) SelectFolder(ctx context.Context, userId, categoryName, folderName string) (entities.Folder, error) {
-	var folder entities.Folder
-	filter := bson.M{"_id": userId, "categories.name": categoryName, "categories.folders.name": folderName}
-	projection := bson.M{"categories.folders.$": 1}
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"_id":                     userId,
+				"categories.name":         categoryName,
+				"categories.folders.name": folderName,
+			},
+		},
+		{
+			"$unwind": "$categories",
+		},
+		{
+			"$match": bson.M{
+				"categories.name": categoryName,
+			},
+		},
+		{
+			"$unwind": "$categories.folders",
+		},
+		{
+			"$match": bson.M{
+				"categories.folders.name": folderName,
+			},
+		},
+		{
+			"$replaceRoot": bson.M{
+				"newRoot": "$categories.folders",
+			},
+		},
+	}
 
-	err := f.collection.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&folder)
+	cursor, err := f.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return entities.Folder{}, ErrFolderNotFound
-		}
+		return entities.Folder{}, err
+	}
+	defer cursor.Close(ctx)
+
+	if !cursor.Next(ctx) {
+		return entities.Folder{}, ErrFolderNotFound
+	}
+
+	var folder entities.Folder
+	if err := cursor.Decode(&folder); err != nil {
 		return entities.Folder{}, err
 	}
 
@@ -54,25 +87,48 @@ func (f folderMongoRepository) SelectFolder(ctx context.Context, userId, categor
 }
 
 func (f folderMongoRepository) SelectFolders(ctx context.Context, userId, categoryName string) ([]entities.Folder, error) {
-	var folders []entities.Folder
-	filter := bson.M{"_id": userId, "categories.name": categoryName}
-
-	cursor, err := f.collection.Find(ctx, filter)
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"_id":             userId,
+				"categories.name": categoryName,
+			},
+		},
+		{
+			"$unwind": "$categories",
+		},
+		{
+			"$match": bson.M{
+				"categories.name": categoryName,
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":     0,
+				"folders": "$categories.folders",
+			},
+		},
+	}
+	cursor, err := f.collection.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, ErrCategoryNotFound
+		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	for cursor.Next(ctx) {
-		var folder entities.Folder
-		err := cursor.Decode(&folder)
-		if err != nil {
-			return nil, err
-		}
-		folders = append(folders, folder)
+	if !cursor.Next(ctx) {
+		return nil, ErrCategoryNotFound
 	}
 
-	return folders, nil
+	type result struct {
+		Folders []entities.Folder `bson:"folders"`
+	}
+
+	var res result
+	if err := cursor.Decode(&res); err != nil {
+		return nil, err
+	}
+
+	return res.Folders, nil
 }
 
 func (f folderMongoRepository) DeleteFolder(ctx context.Context, userId, categoryName, folderName string) error {

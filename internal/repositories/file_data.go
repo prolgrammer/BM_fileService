@@ -18,6 +18,7 @@ func NewFileMongoRepository(collection *mongo.Collection) FileRepository {
 
 func (f *fileMongoRepository) CreateFile(ctx context.Context, data entities.File) error {
 	file := bson.M{
+		"_id":         data.Id,
 		"name":        data.Name,
 		"description": data.Description,
 		"size":        data.Size,
@@ -48,6 +49,24 @@ func (f *fileMongoRepository) SelectFile(ctx context.Context, categoryId, folder
 		return entities.File{}, err
 	}
 
+	return file, nil
+}
+
+func (f *fileMongoRepository) SelectFileByNameAndVersion(ctx context.Context, categoryId, name, version string) (entities.File, error) {
+	var file entities.File
+	filter := bson.M{
+		"name":                   name,
+		"categories.category_id": categoryId,
+		"version":                version,
+	}
+
+	err := f.collection.FindOne(ctx, filter).Decode(&file)
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return entities.File{}, ErrFileNotFound
+		}
+		return entities.File{}, err
+	}
 	return file, nil
 }
 
@@ -93,11 +112,9 @@ func (f *fileMongoRepository) UpdateFile(ctx context.Context, file entities.File
 	return nil
 }
 
-func (f *fileMongoRepository) DeleteFile(ctx context.Context, categoryId, folderName, fileName string) error {
+func (f *fileMongoRepository) DeleteFile(ctx context.Context, fileName string) error {
 	filter := bson.M{
-		"name":                   fileName,
-		"categories.category_id": categoryId,
-		"categories.folders":     entities.CreateFolder(folderName),
+		"_id": fileName,
 	}
 
 	res, err := f.collection.DeleteOne(ctx, filter)
@@ -116,6 +133,23 @@ func (f *fileMongoRepository) CheckFileExists(ctx context.Context, categoryId, f
 		"name":                   fileName,
 		"categories.category_id": categoryId,
 		"categories.folders":     entities.CreateFolder(folderName),
+	}
+
+	err := f.collection.FindOne(ctx, filter).Err()
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (f *fileMongoRepository) CheckFileExistsByNameAndVersion(ctx context.Context, name, version string) (bool, error) {
+	filter := bson.M{
+		"name":    name,
+		"version": version,
 	}
 
 	err := f.collection.FindOne(ctx, filter).Err()

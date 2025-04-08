@@ -60,11 +60,9 @@ func (d *deleteFileUseCase) DeleteFile(ctx context.Context, accountId string, re
 		return fmt.Errorf("folder %s not found in category %s for file %s", req.Folder.Name, req.Category.Name, req.Name)
 	}
 
-	err = cleanupFile(ctx, d.minio.MinioClient, d.minio.BucketName, d.fileRepository,
+	return cleanupFile(ctx, d.minio.MinioClient, d.minio.BucketName, d.fileRepository,
 		accountId, category.Id, req.Folder.Name,
 		&file)
-
-	return nil
 }
 
 func cleanupFile(ctx context.Context,
@@ -78,11 +76,11 @@ func cleanupFile(ctx context.Context,
 		if fileCategory.CategoryId == categoryId {
 			updatedFolders := make([]entities.Folder, 0, len(fileCategory.Folders))
 			for _, folder := range fileCategory.Folders {
-				if folder.Name == folderName {
+				if folder.Name != folderName { // Исключаем папку, которую удаляем
 					updatedFolders = append(updatedFolders, folder)
 				}
 			}
-			if len(updatedFolders) > 0 {
+			if len(updatedFolders) > 0 { // Если остались папки, добавляем категорию
 				fileCategory.Folders = updatedFolders
 				updatedCategories = append(updatedCategories, fileCategory)
 			}
@@ -99,13 +97,13 @@ func cleanupFile(ctx context.Context,
 
 	if len(file.Categories) == 0 {
 		path := fmt.Sprintf("%s/%s/%s", accountId, file.Version, file.Name)
-
 		err := minioClient.RemoveObject(ctx, bucketName, path, minio.RemoveObjectOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to delete file %s from MinIO: %w", file.Name, err)
 		}
 
-		err = fileRepository.DeleteFile(ctx, categoryId, folderName, file.Name)
+		fmt.Println("deleted file", file)
+		err = fileRepository.DeleteFile(ctx, file.Id)
 		if err != nil {
 			return fmt.Errorf("failed to delete file %s from database: %w", file.Name, err)
 		}
@@ -113,6 +111,5 @@ func cleanupFile(ctx context.Context,
 		return nil
 	}
 	fmt.Printf("File %s updated, folder %s removed from category %s\n", file.Name, folderName, categoryId)
-
 	return nil
 }

@@ -3,7 +3,7 @@ package entities
 import "time"
 
 type File struct {
-	Id          string         `json:"id" bson:"_id,omitempty" mapstructure:"id"`
+	Id          string         `json:"id" bson:"_id,omitempty"`
 	Name        string         `json:"name" bson:"name"`
 	Description string         `json:"description" bson:"description, omitempty"`
 	Size        int            `json:"size" bson:"size"`

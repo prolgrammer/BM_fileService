@@ -96,12 +96,13 @@ func initPackages(cfg *config.Config) error {
 }
 
 func initRepositories() {
-	collection := mongoClient.Database.Collection("categories")
+	userCollection := mongoClient.Database.Collection("users")
+	fileCollection := mongoClient.Database.Collection("files")
 
-	accountRepository = repositories.NewAccountMongoRepository(collection)
-	categoryRepository = repositories.NewCategoryDataRepository(collection)
-	folderRepository = repositories.NewFolderMongoRepository(collection)
-	fileRepository = repositories.NewFileMongoRepository(collection)
+	accountRepository = repositories.NewAccountMongoRepository(userCollection)
+	categoryRepository = repositories.NewCategoryDataRepository(userCollection)
+	folderRepository = repositories.NewFolderMongoRepository(userCollection)
+	fileRepository = repositories.NewFileMongoRepository(fileCollection)
 }
 
 func initUseCases() {

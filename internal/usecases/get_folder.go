@@ -23,7 +23,7 @@ func NewSelectFolderUseCase(categoryRepository repositories.CategoryRepository, 
 	}
 }
 
-func (s *selectFolderUseCase) SelectFolder(ctx context.Context, accountId string, request requests.Folder) (responses.Folder, error) {
+func (s *selectFolderUseCase) SelectFolder(ctx context.Context, accountId string, request requests.Folder) (responses.Folder, error) { //TODO добавить добавление всех файлов в папке
 	_, err := s.categoryRepository.SelectCategory(ctx, accountId, request.Category.Name)
 	if err != nil {
 		return responses.Folder{}, err
