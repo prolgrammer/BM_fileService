@@ -22,7 +22,7 @@ func NewCreateCategoryUseCase(
 	}
 }
 
-func (uc *createCategory) CreateCategory(ctx context.Context, accountId string, req requests.Category) error {
+func (uc *createCategory) CreateCategory(ctx context.Context, accountId string, req requests.Category) error { //TODO добавить проверку на наличие аккаунта
 	exists, err := uc.categoryRepository.CheckCategoryExists(ctx, accountId, req.Name)
 	if err != nil {
 		return fmt.Errorf("%w", err)

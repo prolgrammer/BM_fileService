@@ -7,11 +7,12 @@ import (
 
 type File struct {
 	Name        string    `json:"name" bson:"name"`
-	Description string    `json:"description" bson:"description"`
+	Description string    `json:"description,omitempty" bson:"description"`
 	Size        int       `json:"size" bson:"size"`
 	Type        string    `json:"type" bson:"type"`
 	Version     string    `json:"version" bson:"version"`
 	CreatedAt   time.Time `json:"created_at" bson:"created_at"`
+	URL         string    `json:"url" bson:"-"`
 }
 
 func NewFile(file entities.File) File {

@@ -38,3 +38,16 @@ func (a *accountMongoRepository) SelectAccount(ctx context.Context, userId strin
 	}
 	return account, nil
 }
+
+func (a *accountMongoRepository) CheckAccountExists(ctx context.Context, userId string) (bool, error) {
+	filter := bson.D{{"_id", userId}}
+	err := a.collection.FindOne(ctx, filter).Err()
+	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	return true, nil
+}

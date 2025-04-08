@@ -76,6 +76,23 @@ func (f *fileMongoRepository) SelectFiles(ctx context.Context, categoryId, folde
 
 }
 
+func (f *fileMongoRepository) UpdateFile(ctx context.Context, file entities.File) error {
+	filter := bson.M{"_id": file.Id}
+	update := bson.M{
+		"$set": bson.M{
+			"categories": file.Categories,
+		},
+	}
+	res, err := f.collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return ErrFileNotFound
+	}
+	return nil
+}
+
 func (f *fileMongoRepository) DeleteFile(ctx context.Context, categoryId, folderName, fileName string) error {
 	filter := bson.M{
 		"name":                   fileName,

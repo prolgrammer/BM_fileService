@@ -8,6 +8,8 @@ import (
 type (
 	AccountRepository interface {
 		CreateAccount(ctx context.Context, userId string) error
+		SelectAccount(ctx context.Context, userId string) (entities.Account, error)
+		CheckAccountExists(ctx context.Context, userId string) (bool, error)
 	}
 
 	CategoryRepository interface {
@@ -30,6 +32,7 @@ type (
 		CreateFile(ctx context.Context, data entities.File) error
 		SelectFile(ctx context.Context, categoryId, folderName, fileName string) (entities.File, error)
 		SelectFiles(ctx context.Context, categoryId, folderName string) ([]entities.File, error)
+		UpdateFile(ctx context.Context, file entities.File) error
 		DeleteFile(ctx context.Context, categoryId, folderName, fileName string) error
 		CheckFileExists(ctx context.Context, categoryId, folderName, fileName string) (bool, error)
 	}

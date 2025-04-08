@@ -15,30 +15,48 @@ type GetFileUseCase interface {
 }
 
 type getFile struct {
-	minio          *m.Client
-	fileRepository repositories.FileRepository
+	minio              *m.Client
+	categoryRepository repositories.CategoryRepository
+	folderRepository   repositories.FolderRepository
+	fileRepository     repositories.FileRepository
 }
 
 func NewGetFileUseCase(
 	minio *m.Client,
+	categoryRepository repositories.CategoryRepository,
+	folderRepository repositories.FolderRepository,
 	fileRepository repositories.FileRepository,
 ) GetFileUseCase {
 	return &getFile{
-		minio:          minio,
-		fileRepository: fileRepository,
+		minio:              minio,
+		categoryRepository: categoryRepository,
+		folderRepository:   folderRepository,
+		fileRepository:     fileRepository,
 	}
 }
 
 func (g *getFile) GetFile(ctx context.Context, accountId string, req requests.File) (responses.File, error) {
-	file, err := g.fileRepository.SelectFile(ctx, accountId, req.Category.Name, req.Folder.Name, req.Name)
+	category, err := g.categoryRepository.SelectCategory(ctx, accountId, req.Category.Name)
+	if err != nil {
+		return responses.File{}, fmt.Errorf("category not found in database: %w", err)
+	}
+
+	_, err = g.folderRepository.CheckFolderExists(ctx, accountId, req.Category.Name, req.Folder.Name)
+	if err != nil {
+		return responses.File{}, fmt.Errorf("folder not found in database: %w", err)
+	}
+
+	file, err := g.fileRepository.SelectFile(ctx, category.Id, req.Folder.Name, req.Name)
 	if err != nil {
 		return responses.File{}, fmt.Errorf("failed to get file from database: %w", err)
 	}
 
+	objectName := fmt.Sprintf("%s/%s/%s", accountId, file.Version, file.Name)
+
 	fileUrl, err := g.minio.MinioClient.PresignedGetObject(
 		ctx,
 		g.minio.BucketName,
-		file.Path,
+		objectName,
 		24*time.Hour,
 		nil,
 	)
@@ -48,10 +66,12 @@ func (g *getFile) GetFile(ctx context.Context, accountId string, req requests.Fi
 	}
 
 	return responses.File{
-		Name:      file.Name,
-		Path:      fileUrl.String(),
-		Size:      file.Size,
-		Type:      file.Type,
-		CreatedAt: file.CreatedAt,
+		Name:        file.Name,
+		Description: file.Description,
+		Size:        file.Size,
+		Type:        file.Type,
+		Version:     file.Version,
+		CreatedAt:   file.CreatedAt,
+		URL:         fileUrl.String(),
 	}, nil
 }

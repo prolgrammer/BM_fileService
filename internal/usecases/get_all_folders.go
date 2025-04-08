@@ -5,6 +5,8 @@ import (
 	"app/controllers/responses"
 	"app/internal/repositories"
 	"context"
+	"errors"
+	"fmt"
 )
 
 type selectFoldersUseCase struct {
@@ -26,7 +28,10 @@ func NewSelectFoldersUseCase(categoryRepository repositories.CategoryRepository,
 func (s *selectFoldersUseCase) SelectFolders(ctx context.Context, accountId string, request requests.Category) ([]responses.Folder, error) {
 	_, err := s.categoryRepository.SelectCategory(ctx, accountId, request.Name)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, repositories.ErrCategoryNotFound) {
+			return nil, fmt.Errorf("category '%s' not found: %w", request.Name, err)
+		}
+		return nil, fmt.Errorf("failed to verify category: %w", err)
 	}
 
 	folders, err := s.folderRepository.SelectFolders(ctx, accountId, request.Name)
@@ -34,9 +39,9 @@ func (s *selectFoldersUseCase) SelectFolders(ctx context.Context, accountId stri
 		return nil, err
 	}
 
-	foldersResponse := make([]responses.Folder, len(folders))
-	for i, folder := range folders {
-		foldersResponse[i] = responses.NewFolder(folder.Name, folder.Files)
+	foldersResponse := make([]responses.Folder, 0, len(folders))
+	for _, folder := range folders {
+		foldersResponse = append(foldersResponse, responses.NewFolder(folder.Name))
 	}
 
 	return foldersResponse, nil

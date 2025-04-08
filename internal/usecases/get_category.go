@@ -32,5 +32,5 @@ func (uc *getCategory) GetCategory(ctx context.Context, accountId string, req re
 		return responses.Category{}, err
 	}
 
-	return responses.NewCategory(category.Name, category.UserId, category.Folders), nil
+	return responses.NewCategory(category.Name, accountId, category.Folders), nil
 }

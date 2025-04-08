@@ -6,7 +6,6 @@ import (
 	"app/internal/repositories"
 	"context"
 	"fmt"
-	"github.com/minio/minio-go/v7"
 )
 
 type deleteCategory struct {
@@ -35,38 +34,38 @@ func NewDeleteCategoryUseCase(
 	}
 }
 
-func (uc *deleteCategory) DeleteCategory(ctx context.Context, accountId string, req requests.Category) error { //TODO
+func (uc *deleteCategory) DeleteCategory(ctx context.Context, accountId string, req requests.Category) error {
+	category, err := uc.categoryRepository.SelectCategory(ctx, accountId, req.Name)
+	if err != nil {
+		return fmt.Errorf("failed to get category: %s: %w", req.Name, err)
+	}
+
 	folders, err := uc.folderRepository.SelectFolders(ctx, accountId, req.Name)
 	if err != nil {
 		return fmt.Errorf("failed to get category folders: %w", err)
 	}
 
-	var filePaths []string
 	for _, folder := range folders {
-		files := folder.Files
+		files, err := uc.fileRepository.SelectFiles(ctx, category.Id, folder.Name)
+		if err != nil {
+			return fmt.Errorf("failed to get category files: %w", err)
+		}
+
 		for _, file := range files {
-			filePaths = append(filePaths, file.Path)
-		}
-	}
+			err = cleanupFile(ctx, uc.minio.MinioClient, uc.minio.BucketName, uc.fileRepository,
+				accountId, category.Id, folder.Name,
+				&file)
 
-	if len(filePaths) > 0 {
-		objectCh := make(chan minio.ObjectInfo)
-
-		go func() {
-			for _, filePath := range filePaths {
-				objectCh <- minio.ObjectInfo{Key: filePath}
+			if err != nil {
+				return err
 			}
-		}()
-
-		for err := range uc.minio.MinioClient.RemoveObjects(ctx, uc.minio.BucketName, objectCh, minio.RemoveObjectsOptions{}) {
-			return err.Err
 		}
-		return nil
 	}
 
 	if err := uc.categoryRepository.DeleteCategory(ctx, accountId, req.Name); err != nil {
 		return fmt.Errorf("failed to delete files from category db: %w", err)
 	}
 
+	fmt.Printf("Category %s deleted for account %s\n", req.Name, accountId)
 	return nil
 }

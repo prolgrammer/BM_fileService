@@ -34,5 +34,5 @@ func (s *selectFolderUseCase) SelectFolder(ctx context.Context, accountId string
 		return responses.Folder{}, err
 	}
 
-	return responses.NewFolder(folder.Name, folder.Files), nil
+	return responses.NewFolder(folder.Name), nil
 }
