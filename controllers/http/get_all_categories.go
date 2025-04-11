@@ -26,6 +26,18 @@ func NewGetAllCategoriesUseCases(
 	engine.GET("/app/categories", middleware.Authenticate, gac.GetAllCategories, middleware.HandleErrors)
 }
 
+// GetAllCategories godoc
+// @Summary Получение всех категорий
+// @Description Возвращает все категории и лежащие в них папки
+// @Tags Categories
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} []responses.Category "Категории данного аккаунта"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/categories [get]
 func (gac *getAllCategories) GetAllCategories(ctx *gin.Context) {
 	fmt.Println("get all categories")
 

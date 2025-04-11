@@ -27,6 +27,19 @@ func NewGetCategoryController(
 	engine.GET("/app/category", middleware.Authenticate, gc.GetCategory, middleware.HandleErrors)
 }
 
+// GetCategory godoc
+// @Summary Получение конкретной категории
+// @Description Возвращает конкретную категорию и ее папку
+// @Tags Categories
+// @Accept json
+// @Produce json
+// @Param request body requests.Category true "Название категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} responses.Category "Категория данного аккаунта"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/category [get]
 func (gc *getCategoryController) GetCategory(ctx *gin.Context) {
 	fmt.Println("get category")
 

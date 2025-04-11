@@ -24,6 +24,18 @@ func NewCreateAccountController(
 	engine.POST("/app/account", middleware.Authenticate, ac.CreateAccount, middleware.HandleErrors)
 }
 
+// CreateAccount godoc
+// @Summary Создание аккаунта пользователя
+// @Description Создает аккаунт для пользователя, с последующем созданием категорий
+// @Tags Account
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} string "Результат создания"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/account [post]
 func (ac *createAccountController) CreateAccount(ctx *gin.Context) {
 	fmt.Println("create account")
 

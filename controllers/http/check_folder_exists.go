@@ -24,10 +24,23 @@ func NewCheckFolderExistController(
 		checkFolderExistUseCase: checkCategoryExistUseCase,
 	}
 
-	engine.GET("/app/folder/exist", middleware.Authenticate, checkFolderExistController.CheckFolderExist, middleware.HandleErrors)
+	engine.GET("/app/folder/exist", middleware.Authenticate, checkFolderExistController.CheckFolderExists, middleware.HandleErrors)
 }
 
-func (c *CheckFolderExistController) CheckFolderExist(ctx *gin.Context) {
+// CheckFolderExists godoc
+// @Summary      Проверка существования папки
+// @Description  Проверяет, существует ли папка для указанного аккаунта
+// @Tags         Folders
+// @Accept       json
+// @Produce      json
+// @Param        request body requests.Folder true "Название папки, категория"
+// @Param        Authorization header string true "Токен доступа"
+// @Success      200 {object} bool "Результат проверки (true - существует, false - не существует)"
+// @Failure      400 {object} string "Некорректный формат запроса"
+// @Failure      401 {object} string "Ошибка аутентификации"
+// @Failure      500 {object} string "Внутренняя ошибка сервера"
+// @Router       /app/folder/exist [get]
+func (c *CheckFolderExistController) CheckFolderExists(ctx *gin.Context) {
 	fmt.Println("check folder exist")
 
 	accountId, exist := ctx.Get("account_id")

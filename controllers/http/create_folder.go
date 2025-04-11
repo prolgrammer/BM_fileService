@@ -25,6 +25,19 @@ func NewCreateFolderController(
 	engine.POST("/app/folder", middleware.Authenticate, cf.CreateFolder, middleware.HandleErrors)
 }
 
+// CreateFolder godoc
+// @Summary Создание папки пользователя
+// @Description Создает папку для пользователя
+// @Tags Folders
+// @Accept json
+// @Produce json
+// @Param request body requests.Folder true "Название папки, название категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} string "Результат проверки"
+// @Failure 400 {object} string "Некорректный формат запрос"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/folder [post]
 func (cf *createFolderController) CreateFolder(ctx *gin.Context) {
 	fmt.Println("create folder")
 

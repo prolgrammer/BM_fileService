@@ -27,6 +27,19 @@ func NewGetFolderController(
 	engine.GET("/app/folder", middleware.Authenticate, gf.GetFolder, middleware.HandleErrors)
 }
 
+// GetFolder godoc
+// @Summary Получение нужной папки
+// @Description Возвращает папк конкретной категории
+// @Tags Folders
+// @Accept json
+// @Produce json
+// @Param request body requests.Folder true "Название папки, категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} responses.Folder "Конкретная папка данного аккаунта"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/folder [get]
 func (gf *getFolderController) GetFolder(ctx *gin.Context) {
 	fmt.Println("get folder")
 

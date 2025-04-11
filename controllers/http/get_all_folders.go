@@ -25,6 +25,19 @@ func NewGetAllFoldersController(
 	engine.GET("/app/folders", middleware.Authenticate, gaf.GetAllFolders, middleware.HandleErrors)
 }
 
+// GetAllFolders godoc
+// @Summary Получение всех папок
+// @Description Возвращает все папки конкретной категории
+// @Tags Folders
+// @Accept json
+// @Produce json
+// @Param request body requests.Folder true "Название папки, категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} []responses.Folder "Папки в категории"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/folders [get]
 func (gaf *getAllFoldersController) GetAllFolders(ctx *gin.Context) {
 	fmt.Println("get all folders")
 

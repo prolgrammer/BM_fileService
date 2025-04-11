@@ -24,10 +24,23 @@ func NewCheckCategoryExistController(
 		checkCategoryExistUseCase: checkCategoryExistUseCase,
 	}
 
-	engine.GET("/app/category/exist", middleware.Authenticate, checkCategoryExistController.CheckCategoryExist, middleware.HandleErrors)
+	engine.GET("/app/category/exist", middleware.Authenticate, checkCategoryExistController.CheckCategoryExists, middleware.HandleErrors)
 }
 
-func (c *CheckCategoryExistController) CheckCategoryExist(ctx *gin.Context) {
+// CheckCategoryExists godoc
+// @Summary      Проверка существования категории
+// @Description  Проверяет, существует ли категория для указанного аккаунта
+// @Tags         Categories
+// @Accept       json
+// @Produce      json
+// @Param        request body requests.Category true "Название категории"
+// @Param        Authorization header string true "Токен доступа"
+// @Success      200 {object} bool "Результат проверки (true - существует, false - не существует)"
+// @Failure      400 {object} string "Некорректный формат запроса"
+// @Failure      401 {object} string "Ошибка аутентификации"
+// @Failure      500 {object} string "Внутренняя ошибка сервера"
+// @Router       /app/category/exist [get]
+func (c *CheckCategoryExistController) CheckCategoryExists(ctx *gin.Context) {
 	fmt.Println("check category exist")
 
 	accountId, exist := ctx.Get("account_id")

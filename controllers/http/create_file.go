@@ -25,6 +25,19 @@ func NewCreateFileController(
 	engine.POST("/app/file", middleware.Authenticate, cf.CreateFile, middleware.HandleErrors)
 }
 
+// CreateFile godoc
+// @Summary Добавление файла
+// @Description Создание и добавление файла в базу данных
+// @Tags Files
+// @Accept multipart/form-data
+// @Produce json
+// @Param request body requests.CreateFile true "Файл, версия файлы, название папки, название категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} string "Результат создания"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/file [post]
 func (cf *createFileController) CreateFile(ctx *gin.Context) {
 	accountId, exists := ctx.Get("account_id")
 	if !exists {

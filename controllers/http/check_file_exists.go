@@ -25,6 +25,19 @@ func NewCheckFileExistsUseCase(
 	engine.GET("/app/file/exists", middleware.Authenticate, cf.CheckFileExists, middleware.HandleErrors)
 }
 
+// CheckFileExists godoc
+// @Summary      Проверка существования файла
+// @Description  Проверяет, существует ли файл для указанного аккаунта
+// @Tags         Files
+// @Accept       json
+// @Produce      json
+// @Param        request body requests.File true "Название файла, папка, категория"
+// @Param        Authorization header string true "Токен доступа"
+// @Success      200 {object} map[string]bool "Результат проверки {\"exists\": true/false}"
+// @Failure      400 {object} string "Некорректный формат запроса"
+// @Failure      401 {object} string "Ошибка аутентификации"
+// @Failure      500 {object} string "Внутренняя ошибка сервера"
+// @Router       /app/file/exists [get]
 func (cf *checkFileExistsController) CheckFileExists(ctx *gin.Context) {
 	accountId, exists := ctx.Get("account_id")
 	if !exists {

@@ -11,6 +11,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/prolgrammer/BM_package/middleware"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 )
 
@@ -151,6 +153,7 @@ func runServer() {
 	http2.NewGetAllFilesUseCase(router, getAllFilesUseCase, mw)
 	http2.NewDeleteFileController(router, deleteFileUseCase, mw)
 	http2.NewCheckFileExistsUseCase(router, checkFileExistsUseCase, mw)
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	address := fmt.Sprintf("%s:%s", cfg.HTTP.Host, cfg.HTTP.Port)
 	fmt.Printf("starting server at %s\n", address)

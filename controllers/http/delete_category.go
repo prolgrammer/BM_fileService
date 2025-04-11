@@ -26,6 +26,19 @@ func NewDeleteCategoryController(
 	engine.POST("/app/category/delete", middleware.Authenticate, dc.Delete, middleware.HandleErrors)
 }
 
+// Delete godoc
+// @Summary Удаление категории
+// @Description Удаляет категорию, ее папки и файлы
+// @Tags Categories
+// @Accept json
+// @Produce json
+// @Param request body requests.Category true "Название категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} string "Результат удаление"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/category/delete [post]
 func (dc *deleteCategoryController) Delete(ctx *gin.Context) {
 	fmt.Println("delete category")
 

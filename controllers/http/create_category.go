@@ -26,6 +26,19 @@ func NewCreateCategoryController(
 	engine.POST("/app/category", middleware.Authenticate, cc.CreateCategory, middleware.HandleErrors)
 }
 
+// CreateCategory godoc
+// @Summary Создание категории пользователя
+// @Description Создает категорию для пользователя по ID переданного через токен
+// @Tags Categories
+// @Accept json
+// @Produce json
+// @Param request body requests.Category true "Название категории"
+// @Param Authorization header string true "Токен доступа"
+// @Success 200 {object} string "Результат создания"
+// @Failure 400 {object} string "Некорректный формат запроса"
+// @Failure 401 {object} string "Ошибка аутентификации"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /app/category [post]
 func (cc *createCategoryController) CreateCategory(ctx *gin.Context) {
 	fmt.Println("create category")
 
