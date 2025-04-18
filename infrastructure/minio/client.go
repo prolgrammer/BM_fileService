@@ -1,6 +1,7 @@
 package minio
 
 import (
+	"context"
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -24,14 +25,19 @@ func NewClient(host, accessKey, secretKey, bucketName string, useSSL bool) (*Cli
 		return nil, fmt.Errorf("failed to create minio client: %v", err)
 	}
 
-	//err = client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
-	//if err != nil {
-	//	resp := minio.ToErrorResponse(err)
-	//	if resp.Code != "BucketAlreadyExists" {
-	//		return nil, fmt.Errorf("failed to create bucket %s: %v", bucketName, err)
-	//	}
-	//	fmt.Println("Bucket already exists, continuing...")
-	//}
+	found, err := client.BucketExists(context.Background(), bucketName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to check if bucket exists: %v", err)
+	}
+
+	fmt.Printf("Bucket exists: %v\n", found)
+
+	if !found {
+		err = client.MakeBucket(context.Background(), bucketName, minio.MakeBucketOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to create bucket '%s': %v", bucketName, err)
+		}
+	}
 
 	return &Client{
 		MinioClient: client,
